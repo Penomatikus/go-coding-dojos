@@ -4,6 +4,10 @@ type Stack[T any] struct {
 	items []T
 }
 
+func New[T any]() *Stack[T] {
+	return &Stack[T]{}
+}
+
 func (s *Stack[T]) Len() int {
 	return len(s.items)
 }
@@ -29,6 +33,10 @@ func (s *Stack[T]) Peek() (*T, bool) {
 
 	i := s.items[s.Len()-1]
 	return &i, true
+}
+
+func (s *Stack[T]) PeekAll() []T {
+	return s.items
 }
 
 func (s *Stack[T]) Push(item T) {

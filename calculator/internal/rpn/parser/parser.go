@@ -3,6 +3,8 @@ package parser
 import (
 	"fmt"
 	"strings"
+
+	"github.com/Penomatikus/calculator/internal/rpn/stack"
 )
 
 var (
@@ -41,8 +43,8 @@ func (eq equationByte) is(b byte) bool {
 
 // toPostfix is reading equation one byte at a time
 func parseEquationToPostfix(equation string) string {
-	rpnStack := new(stack[string])
-	operatorStack := new(Stack[equationByte])
+	rpnStack := stack.New[string]()
+	operatorStack := stack.New[equationByte]()
 
 	termBytes := make([]byte, 0)
 	equationBytes := []equationByte(equation)
@@ -54,7 +56,7 @@ func parseEquationToPostfix(equation string) string {
 
 		if eb.oneOf(append(allowedRpnOperators, allowedNonRpnOperators...)) {
 			if equationBytes[i-1].oneOf(allowedNumericChars) {
-				rpnStack.push(string(termBytes))
+				rpnStack.Push(string(termBytes))
 				termBytes = termBytes[:0]
 			}
 			process(rpnStack, operatorStack, eb)
@@ -64,7 +66,7 @@ func parseEquationToPostfix(equation string) string {
 
 		if eb.oneOf(allowedSeperators) {
 			if len(termBytes) > 0 {
-				rpnStack.push(string(termBytes))
+				rpnStack.Push(string(termBytes))
 				termBytes = termBytes[:0]
 			}
 			continue
@@ -76,15 +78,15 @@ func parseEquationToPostfix(equation string) string {
 	}
 
 	if len(termBytes) > 0 {
-		rpnStack.push(string(termBytes))
+		rpnStack.Push(string(termBytes))
 	}
 
-	for i := operatorStack.len(); i >= 1; i-- {
-		o, _ := operatorStack.pop()
-		rpnStack.push(string(*o))
+	for i := operatorStack.Len(); i >= 1; i-- {
+		o, _ := operatorStack.Pop()
+		rpnStack.Push(string(*o))
 	}
 
-	return strings.Join(rpnStack.items, " ")
+	return strings.Join(rpnStack.PeekAll(), " ")
 }
 
 func precedenceOf(operator equationByte) int {
@@ -98,27 +100,27 @@ func precedenceOf(operator equationByte) int {
 	panic(fmt.Sprintf("You are using it wrong. '%c' not part of the rpn allowed operators.", operator))
 }
 
-func process(rpnStack *Stack[string], operatorStack *Stack[equationByte], newOperator equationByte) {
-	// Stack empty, we can just push it
-	if operatorStack.empty() {
-		operatorStack.push(newOperator)
+func process(rpnStack *stack.Stack[string], operatorStack *stack.Stack[equationByte], newOperator equationByte) {
+	// Stack empty, we can just Push it
+	if operatorStack.Empty() {
+		operatorStack.Push(newOperator)
 		return
 	}
 
-	lastOperator, _ := operatorStack.peek()
+	lastOperator, _ := operatorStack.Peek()
 
 	// Opening parentheses
 	if newOperator.is(openingParenthesis) || lastOperator.is(openingParenthesis) {
-		operatorStack.push(newOperator)
+		operatorStack.Push(newOperator)
 		return
 	}
 
 	// Closing parentheses; Pop all until first appearance of "("
 	if newOperator.is(closingParenthesis) {
 		for {
-			o, _ := operatorStack.pop()
+			o, _ := operatorStack.Pop()
 			if !o.is(openingParenthesis) {
-				rpnStack.push(string(*o))
+				rpnStack.Push(string(*o))
 				continue
 			}
 			break
@@ -131,16 +133,16 @@ func process(rpnStack *Stack[string], operatorStack *Stack[equationByte], newOpe
 
 	// Rule 1
 	if precedenceBefore < precedenceNext {
-		operatorStack.push(newOperator)
+		operatorStack.Push(newOperator)
 		return
 	}
 
 	// Rule 2 || Rule 3
 	if precedenceBefore > precedenceNext ||
 		precedenceBefore == precedenceNext {
-		o, _ := operatorStack.pop()
-		rpnStack.push(string(*o))
-		operatorStack.push(newOperator)
+		o, _ := operatorStack.Pop()
+		rpnStack.Push(string(*o))
+		operatorStack.Push(newOperator)
 		return
 	}
 }
