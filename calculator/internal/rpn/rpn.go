@@ -1,10 +1,5 @@
 package rpn
 
-import (
-	"io"
-	"strings"
-)
-
 type term float32
 
 type operator string
@@ -22,14 +17,14 @@ var (
 	// "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "."
 	allowedNumericChars = []byte{0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x2E}
 	// "+" | "-" | "*" | "/" | "(" | ")"
-	allowedOperators = []byte{0x2B, 0x2D, 0x2A, 0x2F, 0x28, 0x29}
+	allowedNonRpnOperators = []byte{0x2B, 0x2D, 0x2A, 0x2F, 0x28, 0x29}
 )
 
-type parsingByte byte
+type equationByte byte
 
-func (pb parsingByte) oneOf(bytes []byte) (ok bool) {
+func (eq equationByte) oneOf(bytes []byte) (ok bool) {
 	for _, b := range bytes {
-		if byte(pb) == b {
+		if byte(eq) == b {
 			ok = true
 			break
 		}
@@ -37,21 +32,54 @@ func (pb parsingByte) oneOf(bytes []byte) (ok bool) {
 	return
 }
 
-// Parse is reading equation one byte at a time
-func parse(equation string) string {
+// toPostfix is reading equation one byte at a time
+func toPostfix(equation string) string {
 	rpnStack := new(stack[string])
-	operatorStack := new(stack[string])
+	// operatorStack := new(stack[string])
 
-	reader := strings.NewReader(equation)
-	b := make([]byte, 1)
-	for {
-		n, err := reader.Read(b)
-		if err == io.EOF {
-			break
+	equationBytes := []equationByte(equation)
+	termOrOperatorBytes := new(stack[equationByte])
+	// operatorStack := new(stack[equationByte])
+
+	for i, eb := range equationBytes {
+		if eb.oneOf(allowedNumericChars) || eb.oneOf(allowedNonRpnOperators) {
+			termOrOperatorBytes.push(eb)
+		}
+
+		if eb.oneOf(allowedSeperators) {
+			e, l := termOrOperatorBytes.popAll()
+
+		}
+
+		if eb.oneOf(allowedNonRpnOperators) {
+			operatorStack.push(eb)
 		}
 	}
-	return ""
+	// return ""
 }
+
+// toPostfix is reading equation one byte at a time  
+// func toPostfix(equation string) string {
+// 	rpnStack := new(stack[string])
+// 	operatorStack := new(stack[string])
+
+// 	equationBytes := []equationByte(equation)
+// 	termOrOperatorBytes := new(stack[equationByte])
+// 	for i := 0; i < len(equationBytes); i++ {
+// 		eb := equationBytes[i]
+// 		if eb.oneOf(allowedNumericChars) {
+
+// 		}
+
+// 		if equationBytes[i].oneOf(allowedSeperators) {
+// 			// termOrOperatorBytes
+// 		}
+// 		if equationBytes[i].oneOf(allowedNonRpnOperators) {
+// 			operatorStack.push()
+// 		}
+// 	}
+// 	// return ""
+// }
 
 // 3 ÷ 4 • (9 + 3) + 3 - (1 - 4)
 
@@ -91,4 +119,11 @@ func (s *stack[T]) pop() (*T, bool) {
 
 func (s *stack[T]) push(item T) {
 	s.items = append(s.items, item)
+}
+
+// popAll returns the complete stack "as is" and its lenght and cleears s.
+func (s *stack[T]) popAll() ([]T, int) {
+	all := s.items
+	s.items = s.items[:0]
+	return all, len(all)
 }
