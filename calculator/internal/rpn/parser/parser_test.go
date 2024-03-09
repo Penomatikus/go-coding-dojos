@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"errors"
 	"testing"
 )
 
@@ -18,7 +19,7 @@ func Test_parseEquationToPostfix(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		if got := parseEquationToPostfix(tt.infix); got != tt.postfix {
+		if got, _ := parseEquationToPostfix(tt.infix); got != tt.postfix {
 			t.Fatalf("Infix: %s; Expected: %s Got: %s ", tt.infix, tt.postfix, got)
 		}
 	}
@@ -26,16 +27,28 @@ func Test_parseEquationToPostfix(t *testing.T) {
 
 func Test_parseEquationToPostfix_Bad_Equation(t *testing.T) {
 	type args struct {
-		name, infix, postfix string
+		name, infix string
+		err         error
 	}
 
 	tests := []args{
-		{name: "Rule 1", infix: "4 * (2 + a / 8)", postfix: "4 2 9 8 / + *"},
+		{name: "Not allowed rune", infix: "4 * (2 + a / 8)", err: ErrInvalidEquation},
+		{name: "Not allowed start", infix: "* (2 + a / 8)", err: ErrInvalidEquation},
+		{name: "Not allowed start 2", infix: ") + (2 + a / 8)", err: ErrInvalidEquation},
+		{name: "Division by zero", infix: "4 * (2 + 9 / 0)", err: ErrDivisionByZero},
 	}
 
 	for _, tt := range tests {
-		if got := parseEquationToPostfix(tt.infix); got != tt.postfix {
-			t.Fatalf("Infix: %s; Expected: %s Got: %s ", tt.infix, tt.postfix, got)
+		got, err := parseEquationToPostfix(tt.infix)
+		if got != "" {
+			t.Fatal("Got a postfix notation, expected <empty>")
+		}
+		if err == nil {
+			t.Fatal("Got no error on an empty postfix notation")
+
+		}
+		if !errors.Is(err, tt.err) {
+			t.Fatal("Bad error")
 		}
 	}
 }
