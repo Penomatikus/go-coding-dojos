@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -11,11 +10,11 @@ func Test_parseEquationToPostfix(t *testing.T) {
 	}
 
 	tests := []args{
-		{name: "Test 1", infix: "3.412 / 4 * (9 + 3) + 3 - (1 - 4)", postfix: "3.412 4 / 9 3 + * 3 + 1 4 - -"},
-		{name: "Test 2", infix: "3 / 4 * ((9 + 3) * (8 - 9)) + 3 - (1 - 4)", postfix: "3 4 / 9 3 + 8 9 - * * 3 + 1 4 - -"},
 		{name: "Rule 1", infix: "4 * (2 + 9 / 8)", postfix: "4 2 9 8 / + *"},
 		{name: "Rule 2", infix: "2 * 3 + 12 / 4", postfix: "2 3 * 12 4 / +"},
 		{name: "Rule 3", infix: "1 * 2 / 3", postfix: "1 2 * 3 /"},
+		{name: "With .", infix: "3.412 / 4 * (9 + 3) + 3 - (1 - 4)", postfix: "3.412 4 / 9 3 + * 3 + 1 4 - -"},
+		{name: "With nested parenthesis", infix: "3 / 4 * ((9 + 3) * (8 - 9)) + 3 - (1 - 4)", postfix: "3 4 / 9 3 + 8 9 - * * 3 + 1 4 - -"},
 	}
 
 	for _, tt := range tests {
@@ -23,7 +22,20 @@ func Test_parseEquationToPostfix(t *testing.T) {
 			t.Fatalf("Infix: %s; Expected: %s Got: %s ", tt.infix, tt.postfix, got)
 		}
 	}
+}
 
-	s := "5.232 * 13.032 + 30.132 + 7.232 * 52.532 - 5432 + (1432 * 16.032) - 332 + 3832 + (6032 * 3732) * 5032 + (2.432 * 7.332) - 132 - (17.732 * 132) + 4.232 - 7832 + (132 - 2.332) - 3132 - 632 - 5.532 + (87.632 + 132) * 11.632 + 532 * (4.832 * 8.132) * 16.032 + 4132 + 10.332 * 1.132 - (732 * 832) + 732 + 1.532 + (2232 * 3132) + 28.332 + (20.532 - 2.732) + (732 * 632) * (80.632 + 78.232) * 1832 + (332 - 832) + 54.532 - 532 - 3.432 + 832 - (1732 - (6632 * (17.432 * 5.832))) - (28.732 * 3832) * 2.332 + 832 * 7632 - 68.632 * (4.132 + (7132 + 72.332)) - 2232 * 1532 + 332 - 532 - 532 - 532 * (3.432 + (5.232 + 8.832)) + 1.232 + 232 + 1132 - 4832 + 532 * (5.832 + 8.232) * 432 * (3.432 + 2.232) + 8732 * 2032 + (2432 * (5432 * 17.532)) - 632 + 4732 - (1432 - 632) - 7832 + 1232 + 432 + 432 - 55.832 - (632 - (58.132 * (632 - 232))) + 3432 + (84.632 + 132) - 232 + 732 + 24.532 * 16.132 - 332 - (50.032 - 832) + 3532 - (6432 - 6.032) - 732 - 7.432 + 83.132 + 532 - 8632 + 1232 - 432 * (632 - 7832) - (532 + 4432) + 4632 * (12.432 * 3.832) - 432 - 37.532 * 532 + (20.832 * (17.532 * 84.732)) * 1732 + (332 + 8.632)"
-	fmt.Print(parseEquationToPostfix(s))
+func Test_parseEquationToPostfix_Bad_Equation(t *testing.T) {
+	type args struct {
+		name, infix, postfix string
+	}
+
+	tests := []args{
+		{name: "Rule 1", infix: "4 * (2 + a / 8)", postfix: "4 2 9 8 / + *"},
+	}
+
+	for _, tt := range tests {
+		if got := parseEquationToPostfix(tt.infix); got != tt.postfix {
+			t.Fatalf("Infix: %s; Expected: %s Got: %s ", tt.infix, tt.postfix, got)
+		}
+	}
 }

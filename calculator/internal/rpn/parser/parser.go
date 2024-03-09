@@ -8,78 +8,70 @@ import (
 )
 
 var (
-	// " " | "\n" | "\t" | "\r" | "\f" | "\b"
-	allowedSeperators = []byte{0x20, 0x0A, 0x09, 0x0D, 0x0C, 0x08}
-	// "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "."
-	allowedNumericChars = []byte{0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x2E}
-	// "+" | "-"
-	lowerPrecedenceOperators = []byte{0x2B, 0x2D}
-	// "*" | "/"
-	higherPrecedenceOperators = []byte{0x2A, 0x2F}
-	// "+" | "-" | "*" | "/"
-	allowedRpnOperators = append(lowerPrecedenceOperators, higherPrecedenceOperators...)
-	// "("
-	openingParenthesis = byte(0x28)
-	// ")"
-	closingParenthesis = byte(0x29)
-	// "("  | ")"
-	allowedNonRpnOperators = []byte{openingParenthesis, closingParenthesis}
+	allowedSeperators         = []rune{' ', '\n', '\t', '\r', '\f', '\b'}
+	allowedNumericChars       = []rune{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.'}
+	lowerPrecedenceOperators  = []rune{'+', '-'}
+	higherPrecedenceOperators = []rune{'*', '/'}
+	allowedRpnOperators       = append(lowerPrecedenceOperators, higherPrecedenceOperators...)
+	openingParenthesis        = '('
+	closingParenthesis        = ')'
 )
 
-type equationByte byte
+type equationRune rune
 
-func (eq equationByte) oneOf(bytes []byte) bool {
-	for _, b := range bytes {
-		if byte(eq) == b {
+func (eq equationRune) oneOf(runes []rune) bool {
+	for _, r := range runes {
+		if rune(eq) == r {
 			return true
 		}
 	}
 	return false
 }
 
-func (eq equationByte) is(b byte) bool {
-	return byte(eq) == b
+func (eq equationRune) is(r rune) bool {
+	return rune(eq) == r
 }
 
 // toPostfix is reading equation one byte at a time
 func parseEquationToPostfix(equation string) string {
 	rpnStack := stack.New[string]()
-	operatorStack := stack.New[equationByte]()
+	operatorStack := stack.New[equationRune]()
 
-	termBytes := make([]byte, 0)
-	equationBytes := []equationByte(equation)
-	for i, eb := range equationBytes {
-		if eb.oneOf(allowedNumericChars) {
-			termBytes = append(termBytes, byte(eb))
+	term := make([]rune, 0)
+	equationRunes := []equationRune(equation)
+	for i, er := range equationRunes {
+		if er.oneOf(allowedNumericChars) {
+			term = append(term, rune(er))
 			continue
 		}
 
-		if eb.oneOf(append(allowedRpnOperators, allowedNonRpnOperators...)) {
-			if equationBytes[i-1].oneOf(allowedNumericChars) {
-				rpnStack.Push(string(termBytes))
-				termBytes = termBytes[:0]
-			}
-			process(rpnStack, operatorStack, eb)
-			termBytes = termBytes[:0]
+		if er.is(openingParenthesis) {
+			operatorStack.Push(er)
 			continue
 		}
 
-		if eb.oneOf(allowedSeperators) {
-			if len(termBytes) > 0 {
-				rpnStack.Push(string(termBytes))
-				termBytes = termBytes[:0]
-			}
+		if er.is(closingParenthesis) {
+			pushTerm(&term, rpnStack)
+			processClosingParenthesis(rpnStack, operatorStack)
 			continue
 		}
 
-		if i != len(equationBytes) {
-			fmt.Printf("Error at index %d: %c is not allowed", i, eb)
+		if er.oneOf(allowedRpnOperators) {
+			processRpnOperator(rpnStack, operatorStack, er)
+			continue
+		}
+
+		if er.oneOf(allowedSeperators) {
+			pushTerm(&term, rpnStack)
+			continue
+		}
+
+		if i != len(equationRunes) {
+			fmt.Printf("Error at index %d: '%c' is not allowed", i, er)
 		}
 	}
 
-	if len(termBytes) > 0 {
-		rpnStack.Push(string(termBytes))
-	}
+	pushTerm(&term, rpnStack)
 
 	for i := operatorStack.Len(); i >= 1; i-- {
 		o, _ := operatorStack.Pop()
@@ -89,7 +81,25 @@ func parseEquationToPostfix(equation string) string {
 	return strings.Join(rpnStack.PeekAll(), " ")
 }
 
-func precedenceOf(operator equationByte) int {
+func pushTerm(term *[]rune, rpnStack *stack.Stack[string]) {
+	if len(*term) > 0 {
+		rpnStack.Push(string(*term))
+		*term = (*term)[:0]
+	}
+}
+
+func processClosingParenthesis(rpnStack *stack.Stack[string], operatorStack *stack.Stack[equationRune]) {
+	for {
+		o, ok := operatorStack.Pop()
+		if ok && !o.is(openingParenthesis) {
+			rpnStack.Push(string(*o))
+			continue
+		}
+		break
+	}
+}
+
+func precedenceOf(operator equationRune) int {
 	if operator.oneOf(higherPrecedenceOperators) {
 		return 1
 	}
@@ -100,31 +110,12 @@ func precedenceOf(operator equationByte) int {
 	panic(fmt.Sprintf("You are using it wrong. '%c' not part of the rpn allowed operators.", operator))
 }
 
-func process(rpnStack *stack.Stack[string], operatorStack *stack.Stack[equationByte], newOperator equationByte) {
-	// Stack empty, we can just Push it
-	if operatorStack.Empty() {
-		operatorStack.Push(newOperator)
-		return
-	}
-
+func processRpnOperator(rpnStack *stack.Stack[string], operatorStack *stack.Stack[equationRune], newOperator equationRune) {
 	lastOperator, _ := operatorStack.Peek()
 
-	// Opening parentheses
-	if newOperator.is(openingParenthesis) || lastOperator.is(openingParenthesis) {
+	// No precedence check if stack is empty or top stack operator is an opening parenthesis
+	if operatorStack.Empty() || lastOperator.is(openingParenthesis) {
 		operatorStack.Push(newOperator)
-		return
-	}
-
-	// Closing parentheses; Pop all until first appearance of "("
-	if newOperator.is(closingParenthesis) {
-		for {
-			o, _ := operatorStack.Pop()
-			if !o.is(openingParenthesis) {
-				rpnStack.Push(string(*o))
-				continue
-			}
-			break
-		}
 		return
 	}
 
