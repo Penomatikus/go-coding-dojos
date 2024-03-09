@@ -35,6 +35,8 @@ func Test_parseEquationToPostfix_Bad_Equation(t *testing.T) {
 		{name: "Not allowed rune", infix: "4 * (2 + a / 8)", err: ErrInvalidEquation},
 		{name: "Not allowed start", infix: "* (2 + a / 8)", err: ErrInvalidEquation},
 		{name: "Not allowed start 2", infix: ") + (2 + a / 8)", err: ErrInvalidEquation},
+		{name: "Not allowed closing parenthesis", infix: "3 + 2 + 3 / 8)", err: ErrInvalidEquation},
+		{name: "Not allowed opening parenthesis", infix: "3 + 2 + (3 / 8", err: ErrInvalidEquation},
 		{name: "Division by zero", infix: "4 * (2 + 9 / 0)", err: ErrDivisionByZero},
 	}
 

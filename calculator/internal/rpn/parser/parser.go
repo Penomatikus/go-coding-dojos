@@ -41,13 +41,12 @@ func parseEquationToPostfix(equation string) (string, error) {
 	rpnStack := stack.New[string]()
 	operatorStack := stack.New[equationRune]()
 
-	term := make([]rune, 0)
 	equationRunes := []equationRune(equation)
-
 	if equationRunes[0].oneOf(fmt.Sprintf("%s%c", allowedRpnOperators, closingParenthesis)) {
 		return "", errorAtIndex(ErrInvalidEquation, 0, fmt.Sprintf("Equation does not start with a number or '(': %c", equationRunes[0]))
 	}
 
+	term := make([]rune, 0)
 	var err error
 	for i, er := range equationRunes {
 		if err = divZeroCheck(&equationRunes, er, i); err != nil {
@@ -61,7 +60,7 @@ func parseEquationToPostfix(equation string) (string, error) {
 			operatorStack.Push(er)
 		case er.is(closingParenthesis):
 			pushTerm(&term, rpnStack)
-			processClosingParenthesis(rpnStack, operatorStack)
+			err = processClosingParenthesis(rpnStack, operatorStack)
 		case er.oneOf(allowedRpnOperators):
 			processRpnOperator(rpnStack, operatorStack, er)
 		case er.oneOf(allowedSeparators):
@@ -69,12 +68,19 @@ func parseEquationToPostfix(equation string) (string, error) {
 		default:
 			return "", errorAtIndex(ErrInvalidEquation, i, fmt.Sprintf("'%c' is not an allowed character.", er))
 		}
+
+		if err != nil {
+			return "", errorAtIndex(ErrInvalidEquation, i, err.Error())
+		}
 	}
 
 	// push the remaining term and merge the operator stack to the rpn stack in LIFO
 	pushTerm(&term, rpnStack)
 	for i := operatorStack.Len(); i >= 1; i-- {
 		o, _ := operatorStack.Pop()
+		if o.is(openingParenthesis) {
+			return "", errorAtIndex(ErrInvalidEquation, -1, "missing closing parenthesis")
+		}
 		rpnStack.Push(string(*o))
 	}
 
@@ -103,16 +109,21 @@ func divZeroCheck(equationRunes *[]equationRune, current equationRune, currentIn
 	return nil
 }
 
-// processClosingParenthesis pushes all poped items from operatorStack to rpnStack until "("
-func processClosingParenthesis(rpnStack *stack.Stack[string], operatorStack *stack.Stack[equationRune]) {
+// processClosingParenthesis pushes all poped items from operatorStack to rpnStack until "(".
+// Return an error if, the operator stack has no operators left but no opening parenthesis was found.
+func processClosingParenthesis(rpnStack *stack.Stack[string], operatorStack *stack.Stack[equationRune]) error {
 	for {
-		o, _ := operatorStack.Pop()
+		o, ok := operatorStack.Pop()
+		if !ok {
+			return errors.New("missing opening parenthesis")
+		}
 		if !o.is(openingParenthesis) {
 			rpnStack.Push(string(*o))
 			continue
 		}
 		break
 	}
+	return nil
 }
 
 // precedenceOf returns the precedence of operator
