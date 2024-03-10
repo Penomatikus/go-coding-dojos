@@ -16,23 +16,24 @@ func (s *Stack[T]) Empty() bool {
 	return s.Len() == 0
 }
 
-func (s *Stack[T]) Pop() (*T, bool) {
+func (s *Stack[T]) Pop() T {
 	if s.Empty() {
-		return nil, false
+		panic("stack is already empty")
 	}
 
 	i := s.items[s.Len()-1]
 	s.items = s.items[:s.Len()-1]
-	return &i, true
+	return i
 }
 
-func (s *Stack[T]) Peek() (*T, bool) {
+// Peek
+func (s *Stack[T]) Peek() (T, bool) {
 	if s.Empty() {
-		return nil, false
+		var e T
+		return e, false
 	}
 
-	i := s.items[s.Len()-1]
-	return &i, true
+	return s.items[s.Len()-1], true
 }
 
 func (s *Stack[T]) PeekAll() []T {
