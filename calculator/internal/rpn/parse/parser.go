@@ -1,4 +1,4 @@
-package parser
+package parse
 
 import (
 	"errors"
@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/Penomatikus/calculator/internal/rpn/stack"
+	"github.com/Penomatikus/calculator/internal/rpn/token"
 )
 
 var (
@@ -14,11 +15,9 @@ var (
 
 	allowedSeparators         = " \n\t\r\f\b"
 	allowedNumericChars       = "0123456789."
-	lowerPrecedenceOperators  = "+-"
-	higherPrecedenceOperators = "*/"
+	lowerPrecedenceOperators  = fmt.Sprintf("%c%c", token.Addition, token.Substaction)
+	higherPrecedenceOperators = fmt.Sprintf("%c%c", token.Multiplication, token.Division)
 	allowedRpnOperators       = lowerPrecedenceOperators + higherPrecedenceOperators
-	openingParenthesis        = '('
-	closingParenthesis        = ')'
 )
 
 // convenience type
@@ -37,60 +36,65 @@ func errorAtIndex(err error, i int, msg string) error {
 }
 
 // toPostfix is reading equation one byte at a time
-func parseEquationToPostfix(equation string) (string, error) {
-	rpnStack := stack.New[string]()
+func ToPostfix(equation string) ([]string, error) {
+	notation := make([]string, 0)
 	operatorStack := stack.New[equationRune]()
 
 	equationRunes := []equationRune(equation)
-	if equationRunes[0].oneOf(fmt.Sprintf("%s%c", allowedRpnOperators, closingParenthesis)) {
-		return "", errorAtIndex(ErrInvalidEquation, 0, fmt.Sprintf("Equation does not start with a number or '(': %c", equationRunes[0]))
+	if equationRunes[0].oneOf(fmt.Sprintf("%s%c", allowedRpnOperators, token.ClosingParenthesis)) {
+		return nil, errorAtIndex(ErrInvalidEquation, 0, fmt.Sprintf("Equation does not start with a number or '(': %c", equationRunes[0]))
 	}
 
 	term := make([]rune, 0)
 	var err error
 	for i, er := range equationRunes {
 		if err = divZeroCheck(&equationRunes, er, i); err != nil {
-			return "", err
+			return nil, err
 		}
 
 		switch {
 		case er.oneOf(allowedNumericChars):
 			term = append(term, rune(er))
-		case er.is(openingParenthesis):
+
+		case er.is(token.OpeningParenthesis):
 			operatorStack.Push(er)
-		case er.is(closingParenthesis):
-			pushTerm(&term, rpnStack)
-			err = processClosingParenthesis(rpnStack, operatorStack)
+
+		case er.is(token.ClosingParenthesis):
+			pushTerm(&term, &notation)
+			err = processClosingParenthesis(&notation, operatorStack)
+
 		case er.oneOf(allowedRpnOperators):
-			processRpnOperator(rpnStack, operatorStack, er)
+			processRpnOperator(&notation, operatorStack, er)
+
 		case er.oneOf(allowedSeparators):
-			pushTerm(&term, rpnStack)
+			pushTerm(&term, &notation)
+
 		default:
-			return "", errorAtIndex(ErrInvalidEquation, i, fmt.Sprintf("'%c' is not an allowed character.", er))
+			return nil, errorAtIndex(ErrInvalidEquation, i, fmt.Sprintf("'%c' is not an allowed character.", er))
 		}
 
 		if err != nil {
-			return "", errorAtIndex(ErrInvalidEquation, i, err.Error())
+			return nil, errorAtIndex(ErrInvalidEquation, i, err.Error())
 		}
 	}
 
 	// push the remaining term and merge the operator stack to the rpn stack in LIFO
-	pushTerm(&term, rpnStack)
+	pushTerm(&term, &notation)
 	for i := operatorStack.Len(); i >= 1; i-- {
 		o, _ := operatorStack.Pop()
-		if o.is(openingParenthesis) {
-			return "", errorAtIndex(ErrInvalidEquation, -1, "missing closing parenthesis")
+		if o.is(token.OpeningParenthesis) {
+			return nil, errorAtIndex(ErrInvalidEquation, -1, "missing closing parenthesis")
 		}
-		rpnStack.Push(string(*o))
+		notation = append(notation, string(*o))
 	}
 
-	return strings.Join(rpnStack.PeekAll(), " "), nil
+	return notation, nil
 }
 
 // pushTerm pushes term to rpnStack and resets term.
-func pushTerm(term *[]rune, rpnStack *stack.Stack[string]) {
+func pushTerm(term *[]rune, notation *[]string) {
 	if len(*term) > 0 {
-		rpnStack.Push(string(*term))
+		*notation = append(*notation, string(*term))
 		*term = (*term)[:0]
 	}
 }
@@ -111,14 +115,14 @@ func divZeroCheck(equationRunes *[]equationRune, current equationRune, currentIn
 
 // processClosingParenthesis pushes all poped items from operatorStack to rpnStack until "(".
 // Return an error if, the operator stack has no operators left but no opening parenthesis was found.
-func processClosingParenthesis(rpnStack *stack.Stack[string], operatorStack *stack.Stack[equationRune]) error {
+func processClosingParenthesis(notation *[]string, operatorStack *stack.Stack[equationRune]) error {
 	for {
 		o, ok := operatorStack.Pop()
 		if !ok {
 			return errors.New("missing opening parenthesis")
 		}
-		if !o.is(openingParenthesis) {
-			rpnStack.Push(string(*o))
+		if !o.is(token.OpeningParenthesis) {
+			*notation = append(*notation, string(*o))
 			continue
 		}
 		break
@@ -141,11 +145,11 @@ func precedenceOf(operator equationRune) int {
 }
 
 // processRpnOperator
-func processRpnOperator(rpnStack *stack.Stack[string], operatorStack *stack.Stack[equationRune], newOperator equationRune) {
+func processRpnOperator(notation *[]string, operatorStack *stack.Stack[equationRune], newOperator equationRune) {
 	lastOperator, _ := operatorStack.Peek()
 
 	// No precedence check if stack is empty or top stack operator is an opening parenthesis
-	if operatorStack.Empty() || lastOperator.is(openingParenthesis) {
+	if operatorStack.Empty() || lastOperator.is(token.OpeningParenthesis) {
 		operatorStack.Push(newOperator)
 		return
 	}
@@ -163,7 +167,7 @@ func processRpnOperator(rpnStack *stack.Stack[string], operatorStack *stack.Stac
 	if precedenceBefore > precedenceNext ||
 		precedenceBefore == precedenceNext {
 		o, _ := operatorStack.Pop()
-		rpnStack.Push(string(*o))
+		*notation = append(*notation, string(*o))
 		operatorStack.Push(newOperator)
 		return
 	}
