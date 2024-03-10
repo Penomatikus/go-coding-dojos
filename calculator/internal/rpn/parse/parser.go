@@ -15,9 +15,9 @@ var (
 
 	allowedSeparators         = " \n\t\r\f\b"
 	allowedNumericChars       = "0123456789."
-	lowerPrecedenceOperators  = fmt.Sprintf("%c%c", token.Addition, token.Substaction)
-	higherPrecedenceOperators = fmt.Sprintf("%c%c", token.Multiplication, token.Division)
-	allowedRpnOperators       = lowerPrecedenceOperators + higherPrecedenceOperators
+	lowerPrecedenceOperators  = string(token.Addition + token.Substaction)
+	higherPrecedenceOperators = string(token.Multiplication + token.Division)
+	allowedRpnOperators       = string(lowerPrecedenceOperators + higherPrecedenceOperators)
 )
 
 // convenience type
@@ -27,8 +27,8 @@ func (eq equationRune) oneOf(chars string) bool {
 	return strings.ContainsRune(chars, rune(eq))
 }
 
-func (eq equationRune) is(r rune) bool {
-	return rune(eq) == r
+func (eq equationRune) is(s string) bool {
+	return string(eq) == s
 }
 
 func errorAtIndex(err error, i int, msg string) error {
@@ -41,7 +41,7 @@ func ToPostfix(equation string) ([]string, error) {
 	operatorStack := stack.New[equationRune]()
 
 	equationRunes := []equationRune(equation)
-	if equationRunes[0].oneOf(fmt.Sprintf("%s%c", allowedRpnOperators, token.ClosingParenthesis)) {
+	if equationRunes[0].oneOf(allowedRpnOperators + string(token.ClosingParenthesis)) {
 		return nil, errorAtIndex(ErrInvalidEquation, 0, fmt.Sprintf("Equation does not start with a number or '(': %c", equationRunes[0]))
 	}
 
@@ -101,12 +101,12 @@ func pushTerm(term *[]rune, notation *[]string) {
 
 // divZeroCheck returns an error if current is 0 and a divisor
 func divZeroCheck(equationRunes *[]equationRune, current equationRune, currentIndex int) error {
-	if !current.is('0') {
+	if !current.is("0") {
 		return nil
 	}
 
 	lookupIndex := currentIndex - 2
-	if lookupIndex > 0 && (*equationRunes)[lookupIndex].is('/') {
+	if lookupIndex > 0 && (*equationRunes)[lookupIndex].is(token.Division) {
 		return errorAtIndex(ErrDivisionByZero, currentIndex, "Divison by 0 not allowed")
 	}
 
@@ -163,11 +163,19 @@ func processRpnOperator(notation *[]string, operatorStack *stack.Stack[equationR
 		return
 	}
 
-	// Rule 2 || Rule 3
-	if precedenceBefore > precedenceNext ||
-		precedenceBefore == precedenceNext {
+	// Rule 2
+	if precedenceBefore == precedenceNext {
 		o, _ := operatorStack.Pop()
 		*notation = append(*notation, string(*o))
+		operatorStack.Push(newOperator)
+	}
+
+	// Rule 3
+	if precedenceBefore > precedenceNext {
+		for i := operatorStack.Len(); i >= 1; i-- {
+			o, _ := operatorStack.Pop()
+			*notation = append(*notation, string(*o))
+		}
 		operatorStack.Push(newOperator)
 		return
 	}
