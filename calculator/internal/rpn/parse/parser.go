@@ -81,11 +81,11 @@ func ToPostfix(equation string) ([]string, error) {
 	// push the remaining term and merge the operator stack to the rpn stack in LIFO
 	pushTerm(&term, &notation)
 	for i := operatorStack.Len(); i >= 1; i-- {
-		o, _ := operatorStack.Pop()
+		o := operatorStack.Pop()
 		if o.is(token.OpeningParenthesis) {
 			return nil, errorAtIndex(ErrInvalidEquation, -1, "missing closing parenthesis")
 		}
-		notation = append(notation, string(*o))
+		notation = append(notation, string(o))
 	}
 
 	return notation, nil
@@ -116,18 +116,15 @@ func divZeroCheck(equationRunes *[]equationRune, current equationRune, currentIn
 // processClosingParenthesis pushes all poped items from operatorStack to rpnStack until "(".
 // Return an error if, the operator stack has no operators left but no opening parenthesis was found.
 func processClosingParenthesis(notation *[]string, operatorStack *stack.Stack[equationRune]) error {
-	for {
-		o, ok := operatorStack.Pop()
-		if !ok {
-			return errors.New("missing opening parenthesis")
-		}
+	for !operatorStack.Empty() {
+		o := operatorStack.Pop()
 		if !o.is(token.OpeningParenthesis) {
-			*notation = append(*notation, string(*o))
+			*notation = append(*notation, string(o))
 			continue
 		}
-		break
+		return nil
 	}
-	return nil
+	return errors.New("missing opening parenthesis")
 }
 
 // precedenceOf returns the precedence of operator
@@ -146,15 +143,15 @@ func precedenceOf(operator equationRune) int {
 
 // processRpnOperator
 func processRpnOperator(notation *[]string, operatorStack *stack.Stack[equationRune], newOperator equationRune) {
-	lastOperator, _ := operatorStack.Peek()
+	lastOperator, ok := operatorStack.Peek()
 
 	// No precedence check if stack is empty or top stack operator is an opening parenthesis
-	if operatorStack.Empty() || lastOperator.is(token.OpeningParenthesis) {
+	if !ok || lastOperator.is(token.OpeningParenthesis) {
 		operatorStack.Push(newOperator)
 		return
 	}
 
-	precedenceBefore := precedenceOf(*lastOperator)
+	precedenceBefore := precedenceOf(lastOperator)
 	precedenceNext := precedenceOf(newOperator)
 
 	// Rule 1
@@ -165,16 +162,14 @@ func processRpnOperator(notation *[]string, operatorStack *stack.Stack[equationR
 
 	// Rule 2
 	if precedenceBefore == precedenceNext {
-		o, _ := operatorStack.Pop()
-		*notation = append(*notation, string(*o))
+		*notation = append(*notation, string(operatorStack.Pop()))
 		operatorStack.Push(newOperator)
 	}
 
 	// Rule 3
 	if precedenceBefore > precedenceNext {
 		for i := operatorStack.Len(); i >= 1; i-- {
-			o, _ := operatorStack.Pop()
-			*notation = append(*notation, string(*o))
+			*notation = append(*notation, string(operatorStack.Pop()))
 		}
 		operatorStack.Push(newOperator)
 		return
