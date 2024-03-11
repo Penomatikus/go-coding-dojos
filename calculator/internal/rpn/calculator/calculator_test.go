@@ -1,26 +1,98 @@
 package calculator
 
 import (
-	"fmt"
+	"os"
 	"testing"
 )
 
-func Test_Calculate(t *testing.T) {
-	equation := "5.232 * 13.032 + 30.132 + 7.232 * 52.532 - 5432 + (1432 * 16.032) - 332 + 3832 + (6032 * 3732) * 5032 + (2.432 * 7.332) - 132 - (17.732 * 132) + 4.232 - 7832 + (132 - 2.332) - 3132 - 632 - 5.532 + (87.632 + 132) * 11.632 + 532 * (4.832 * 8.132) * 16.032 + 4132 + 10.332 * 1.132 - (732 * 832) + 732 + 1.532 + (2232 * 3132) + 28.332 + (20.532 - 2.732) + (732 * 632) * (80.632 + 78.232) * 1832 + (332 - 832) + 54.532 - 532 - 3.432 + 832 - (1732 - (6632 * (17.432 * 5.832))) - (28.732 * 3832) * 2.332 + 832 * 7632 - 68.632 * (4.132 + (7132 + 72.332)) - 2232 * 1532 + 332 - 532 - 532 - 532 * (3.432 + (5.232 + 8.832)) + 1.232 + 232 + 1132 - 4832 + 532 * (5.832 + 8.232) * 432 * (3.432 + 2.232) + 8732 * 2032 + (2432 * (5432 * 17.532)) - 632 + 4732 - (1432 - 632) - 7832 + 1232 + 432 + 432 - 55.832 - (632 - (58.132 * (632 - 232))) + 3432 + (84.632 + 132) - 232 + 732 + 24.532 * 16.132 - 332 - (50.032 - 832) + 3532 - (6432 - 6.032) - 732 - 7.432 + 83.132 + 532 - 8632 + 1232 - 432 * (632 - 7832) - (532 + 4432) + 4632 * (12.432 * 3.832) - 432 - 37.532 * 532 + (20.832 * (17.532 * 84.732)) * 1732 + (332 + 8.632)"
-	result, err := Calculate(equation)
+func TestAll(t *testing.T) {
+	type test struct {
+		name string
+		test func(t *testing.T)
+	}
+
+	tests := []test{
+		{name: "1k", test: Test_1k},
+		{name: "10k", test: Test_10k},
+		{name: "100k", test: Test_100k},
+		{name: "1000k", test: Test_1000k},
+		{name: "10000k", test: Test_10000k},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, tt.test)
+	}
+
+}
+func Test_1k(t *testing.T) {
+	equation := loadTestdata_t(t, "../testdata/src/halimath/1k")
+	got, err := Calculate(equation)
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
 	}
 
-	fmt.Printf("%f", result)
+	want := float64(248253190541.03891)
+	if got != want {
+		t.Fatalf("got: %f, want %f", got, want)
+	}
 }
 
-func Benchmark_Calculate(t *testing.B) {
-	equation := "5.232 * 13.032 + 30.132 + 7.232 * 52.532 - 5432 + (1432 * 16.032) - 332 + 3832 + (6032 * 3732) * 5032 + (2.432 * 7.332) - 132 - (17.732 * 132) + 4.232 - 7832 + (132 - 2.332) - 3132 - 632 - 5.532 + (87.632 + 132) * 11.632 + 532 * (4.832 * 8.132) * 16.032 + 4132 + 10.332 * 1.132 - (732 * 832) + 732 + 1.532 + (2232 * 3132) + 28.332 + (20.532 - 2.732) + (732 * 632) * (80.632 + 78.232) * 1832 + (332 - 832) + 54.532 - 532 - 3.432 + 832 - (1732 - (6632 * (17.432 * 5.832))) - (28.732 * 3832) * 2.332 + 832 * 7632 - 68.632 * (4.132 + (7132 + 72.332)) - 2232 * 1532 + 332 - 532 - 532 - 532 * (3.432 + (5.232 + 8.832)) + 1.232 + 232 + 1132 - 4832 + 532 * (5.832 + 8.232) * 432 * (3.432 + 2.232) + 8732 * 2032 + (2432 * (5432 * 17.532)) - 632 + 4732 - (1432 - 632) - 7832 + 1232 + 432 + 432 - 55.832 - (632 - (58.132 * (632 - 232))) + 3432 + (84.632 + 132) - 232 + 732 + 24.532 * 16.132 - 332 - (50.032 - 832) + 3532 - (6432 - 6.032) - 732 - 7.432 + 83.132 + 532 - 8632 + 1232 - 432 * (632 - 7832) - (532 + 4432) + 4632 * (12.432 * 3.832) - 432 - 37.532 * 532 + (20.832 * (17.532 * 84.732)) * 1732 + (332 + 8.632)"
-	result, err := Calculate(equation)
+func Test_10k(t *testing.T) {
+	equation := loadTestdata_t(t, "../testdata/src/halimath/10k")
+	got, err := Calculate(equation)
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
 	}
 
-	fmt.Printf("%f", result)
+	want := float64(214512826488689376)
+	if got != want {
+		t.Fatalf("got: %f, want %f", got, want)
+	}
+}
+
+func Test_100k(t *testing.T) {
+	equation := loadTestdata_t(t, "../testdata/src/halimath/100k")
+	got, err := Calculate(equation)
+	if err != nil {
+		t.Fatalf("Unexpected error: %s", err)
+	}
+
+	want := float64(481585283158357967896576)
+	if got != want {
+		t.Fatalf("got: %f, want %f", got, want)
+	}
+}
+
+func Test_1000k(t *testing.T) {
+	equation := loadTestdata_t(t, "../testdata/src/halimath/1m")
+	got, err := Calculate(equation)
+	if err != nil {
+		t.Fatalf("Unexpected error: %s", err)
+	}
+
+	want := float64(830415166156152287340265472)
+	if got != want {
+		t.Fatalf("got: %f, want %f", got, want)
+	}
+}
+
+func Test_10000k(t *testing.T) {
+	equation := loadTestdata_t(t, "../testdata/src/halimath/10m")
+	got, err := Calculate(equation)
+	if err != nil {
+		t.Fatalf("Unexpected error: %s", err)
+	}
+
+	want := float64(6780466519056739908798922614519103488)
+	if got != want {
+		t.Fatalf("got: %f, want %f", got, want)
+	}
+}
+
+func loadTestdata_t(t *testing.T, file string) string {
+	content, err := os.ReadFile(file)
+	if err != nil {
+		t.Fatalf("error loading file %s: %s", file, err)
+	}
+	return string(content)
 }

@@ -30,13 +30,13 @@ func Calculate(equation string) (float64, error) {
 		left := numStack.Pop()
 		rigth := numStack.Pop()
 		switch token {
-		case tkn.Addition:
+		case string(tkn.Addition):
 			numStack.Push(rigth + left)
-		case tkn.Substaction:
+		case string(tkn.Substaction):
 			numStack.Push(rigth - left)
-		case tkn.Division:
+		case string(tkn.Division):
 			numStack.Push(rigth / left)
-		case tkn.Multiplication:
+		case string(tkn.Multiplication):
 			numStack.Push(rigth * left)
 		}
 	}
