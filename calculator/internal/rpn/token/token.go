@@ -1,3 +1,4 @@
+// package token holds the allowed four basic arithmetic oprantors, a function to check if a string is one of that operatos and constans of opening and closing parenthesis.
 package token
 
 const (
