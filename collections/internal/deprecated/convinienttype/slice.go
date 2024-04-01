@@ -20,7 +20,7 @@ func (s *Slice[T]) Map(m Mapper[T]) *Slice[T] {
 }
 
 func (s *Slice[T]) Filter(p Predicate[T]) *Slice[T] {
-	filter := make(Slice[T], 0, len(*s))
+	filter := (*s)[:0]
 	for _, elem := range *s {
 		if p(elem) {
 			filter = append(filter, elem)

@@ -30,19 +30,19 @@ func NewSlice[T any](slice []T) *Slice[T] {
 }
 
 func (s *Slice[T]) hasNext() bool {
-	return s.index < len(s.idxx)-1
+	return s.index < len(s.idxx)
 }
 
 func (s *Slice[T]) next() int {
 	s.index++
-	return s.idxx[s.index]
+	return s.idxx[s.index-1]
 }
 
 func (s *Slice[T]) Filter(p Predicate[T]) *Slice[T] {
-	filter := make([]int, 0, len(s.idxx))
+	filter := s.idxx[:0]
 	for s.hasNext() {
 		if p(s.collection[s.next()]) {
-			filter = append(filter, s.index)
+			filter = append(filter, s.index-1)
 		}
 	}
 	s.idxx = filter
