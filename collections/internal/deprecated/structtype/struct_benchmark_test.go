@@ -30,14 +30,14 @@ func Benchmark_Filter_Even(b *testing.B) {
 	testdata := intTestdata(b, 1000)
 	slice := NewSlice(testdata)
 	for i := 0; i < b.N; i++ {
-		slice.Filter(func(i int) bool { return i%2 == 0 }).Collect()
+		slice.Filter(func(j int) bool { return j%2 == 0 }).Filter(func(j int) bool { return j > 500 && j < 1000 })
 	}
 }
 
 func Benchmark_Filter_String(b *testing.B) {
 	testdata := stringTestdata(b, 1000)
+	slice := NewSlice(testdata)
 	for i := 0; i < b.N; i++ {
-		slice := NewSlice(testdata)
-		slice.Filter(func(s string) bool { return len(s) == 3 }).Collect()
+		slice.Filter(func(s string) bool { return len(s) == 3 })
 	}
 }

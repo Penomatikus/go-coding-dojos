@@ -39,14 +39,25 @@ func (s *Slice[T]) next() int {
 }
 
 func (s *Slice[T]) Filter(p Predicate[T]) *Slice[T] {
-	filter := s.idxx[:0]
+	var filterIndex int
 	for s.hasNext() {
 		if p(s.collection[s.next()]) {
-			filter = append(filter, s.index-1)
+			s.idxx[filterIndex] = s.index - 1
+			filterIndex++
 		}
 	}
-	s.idxx = filter
+	s.idxx = s.idxx[:filterIndex]
 	s.index = 0
+	return s
+}
+
+func (s *Slice[T]) Take(take int) *Slice[T] {
+	s.idxx = s.idxx[:take]
+	return s
+}
+
+func (s *Slice[T]) Skip(skip int) *Slice[T] {
+	s.idxx = s.idxx[skip:]
 	return s
 }
 

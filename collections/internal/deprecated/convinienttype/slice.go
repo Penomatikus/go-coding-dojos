@@ -5,7 +5,6 @@ type Slice[T any] []T
 type Predicate[T any] func(T) bool
 type Mapper[T any] func(T) T
 
-// Deprecated: Is was WIP and try and error, do not use
 func New[T any](elems []T) *Slice[T] {
 	s := append(make(Slice[T], 0, len(elems)), elems...)
 	return &s

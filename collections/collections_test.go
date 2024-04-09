@@ -19,6 +19,26 @@ func Test_Slice_Filter_SHORT(t *testing.T) {
 	assert.Equal(t, want, got)
 }
 
+func Test_Slice_Take(t *testing.T) {
+	data := []int{78, 4, 13, 99, -1, 21, 100, 2, 48}
+	mod := func(i int) bool { return i%2 == 0 }
+
+	slice := NewSlice(data)
+	got := slice.Filter(mod).Take(3).Collect()
+	want := []int{78, 4, 100}
+	assert.Equal(t, want, got)
+}
+
+func Test_Slice_Skip(t *testing.T) {
+	data := []int{78, 4, 13, 99, -1, 21, 100, 2, 48}
+	mod := func(i int) bool { return i%2 == 0 }
+
+	slice := NewSlice(data)
+	got := slice.Filter(mod).Skip(3).Collect()
+	want := []int{2, 48}
+	assert.Equal(t, want, got)
+}
+
 func Test_Slice_Filter_BigData(t *testing.T) {
 	data := intTestdataT(10, 10)
 	result := NewSlice(data).Filter(func(i int) bool { return i%2 == 0 }).Filter(func(i int) bool { return i > 5 && i < 11 }).Collect()
