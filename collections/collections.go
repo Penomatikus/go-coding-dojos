@@ -5,6 +5,7 @@ package collections
 type Sequence[T any] interface {
 	hasNext() bool
 	next() int
+	dryCheck()
 }
 
 var _ Sequence[any] = &Slice[any]{}
@@ -12,6 +13,7 @@ var _ Sequence[any] = &Slice[any]{}
 type Predicate[T any] func(T) bool
 
 type Slice[T any] struct {
+	dry        bool
 	index      int
 	collection []T
 	idxx       []int
@@ -38,7 +40,15 @@ func (s *Slice[T]) next() int {
 	return s.idxx[s.index-1]
 }
 
+func (s *Slice[T]) dryCheck() {
+	s.dry = len(s.idxx) == 0
+}
+
 func (s *Slice[T]) Filter(p Predicate[T]) *Slice[T] {
+	if s.dry {
+		return s
+	}
+
 	var filterIndex int
 	for s.hasNext() {
 		if p(s.collection[s.next()]) {
@@ -46,18 +56,44 @@ func (s *Slice[T]) Filter(p Predicate[T]) *Slice[T] {
 			filterIndex++
 		}
 	}
+
 	s.idxx = s.idxx[:filterIndex]
 	s.index = 0
+
+	s.dryCheck()
 	return s
 }
 
-func (s *Slice[T]) Take(take int) *Slice[T] {
-	s.idxx = s.idxx[:take]
-	return s
+// Take takes the first n elements of s. If s hast less elements than n, all elements will be taken.
+// It panics if n < 0.
+func (s *Slice[T]) Take(n int) *Slice[T] {
+	return s.takeOrSkip(n, true)
 }
 
-func (s *Slice[T]) Skip(skip int) *Slice[T] {
-	s.idxx = s.idxx[skip:]
+// Skip skips the first n elements of s. If s has less elements than n, all elements will be skipped.
+// It panics if n < 0.
+func (s *Slice[T]) Skip(n int) *Slice[T] {
+	return s.takeOrSkip(n, false)
+}
+
+// takeOrSkip is a helper function to avoid violating DRY.
+// It panics if n < 0.
+func (s *Slice[T]) takeOrSkip(n int, take bool) *Slice[T] {
+	if s.dry {
+		return s
+	}
+
+	if len(s.idxx) < n {
+		n = len(s.idxx)
+	}
+
+	if take {
+		s.idxx = s.idxx[:n]
+	} else {
+		s.idxx = s.idxx[n:]
+	}
+
+	s.dryCheck()
 	return s
 }
 

@@ -18,3 +18,4 @@ Open questions:
 Neat online findings:
 
 - [go.dev - Slice Tricks](https://go.dev/wiki/SliceTricks)
+- [go.dev - Intro Generics](https://go.dev/blog/intro-generics)

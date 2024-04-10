@@ -21,22 +21,36 @@ func Test_Slice_Filter_SHORT(t *testing.T) {
 
 func Test_Slice_Take(t *testing.T) {
 	data := []int{78, 4, 13, 99, -1, 21, 100, 2, 48}
-	mod := func(i int) bool { return i%2 == 0 }
 
 	slice := NewSlice(data)
-	got := slice.Filter(mod).Take(3).Collect()
-	want := []int{78, 4, 100}
+	got := slice.Take(3).Collect()
+	want := []int{78, 4, 13}
 	assert.Equal(t, want, got)
+}
+
+func Test_Slice_Take_More_Than_Possible(t *testing.T) {
+	data := []int{78, 4, 13, 99, -1, 21, 100, 2, 48}
+
+	slice := NewSlice(data)
+	got := slice.Take(10).Collect()
+	assert.Equal(t, data, got)
 }
 
 func Test_Slice_Skip(t *testing.T) {
 	data := []int{78, 4, 13, 99, -1, 21, 100, 2, 48}
-	mod := func(i int) bool { return i%2 == 0 }
 
 	slice := NewSlice(data)
-	got := slice.Filter(mod).Skip(3).Collect()
-	want := []int{2, 48}
+	got := slice.Skip(3).Collect()
+	want := []int{99, -1, 21, 100, 2, 48}
 	assert.Equal(t, want, got)
+}
+
+func Test_Slice_Skip_More_Than_Possible(t *testing.T) {
+	data := []int{78, 4, 13, 99, -1, 21, 100, 2, 48}
+
+	slice := NewSlice(data)
+	got := slice.Skip(10).Collect()
+	assert.Equal(t, []int{}, got)
 }
 
 func Test_Slice_Filter_BigData(t *testing.T) {
