@@ -4,7 +4,7 @@ package structtype
 // operations in a functional way.
 type Sequence[T any] interface {
 	hasNext() bool
-	next() *T
+	next() T
 }
 
 var _ Sequence[any] = &Slice[any]{}
@@ -28,15 +28,15 @@ func (s *Slice[T]) hasNext() bool {
 	return s.index < len(s.content)
 }
 
-func (s *Slice[T]) next() *T {
+func (s *Slice[T]) next() T {
 	s.index++
-	return &s.content[s.index-1]
+	return s.content[s.index-1]
 }
 
 func (s *Slice[T]) Find(p Predicate[T]) *Slice[int] {
 	find := make([]int, 0)
 	for s.hasNext() {
-		if p(*s.next()) {
+		if p(s.next()) {
 			find = append(find, s.index-1)
 		}
 	}
@@ -49,12 +49,12 @@ func (s *Slice[T]) Filter(p Predicate[T]) *Slice[T] {
 	find := s.Find(p)
 	filter := make([]T, 0, len(find.content))
 	for find.hasNext() {
-		filter = append(filter, s.content[*find.next()])
+		filter = append(filter, s.content[find.next()])
 
 	}
-	return &Slice[T]{
-		content: filter,
-	}
+	s.content = filter
+	s.index = 0
+	return s
 }
 
 func (s *Slice[T]) Collect() []T {
