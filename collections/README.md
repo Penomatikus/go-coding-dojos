@@ -12,7 +12,7 @@ The cache it's self is reused for every collection function.
 
 ### Example
 
-| Slice / Indeces  | 10 | 12 | 100 | -5 | 96 | 82 | 99 | 1 | 6 | B/op | allocs/op |
+| Slice / Indices  | 10 | 12 | 100 | -5 | 96 | 82 | 99 | 1 | 6 | B/op | allocs/op |
 |------------------|----|----|-----|----|----|----|----|---|---|-----:|----------:|
 | New()            | 0  | 1  | 2   | 3  | 4  | 5  | 6  | 7 | 8 |  96  |    1      |
 | Filter(i%2 == 0) | 0  | 1  | 2   | _  | 4  | 5  | _  | 7 | 8 |   0  |    0      |
