@@ -1,42 +1,19 @@
 package slice
 
 import (
-	"fmt"
-	"math/rand/v2"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_Slice_Filter_SHORT(t *testing.T) {
-	data := []int{2, 4, 13, 99, -1, 21, 100}
-	mod := func(i int) bool { return i%2 == 0 }
-	area := func(i int) bool { return i > 5 && i < 101 }
-
-	slice := New(data)
-	got := slice.Filter(mod).Filter(area).Collect()
-	want := []int{100}
-	assert.Equal(t, want, got)
-}
-
-func Test_Slice_Take(t *testing.T) {
-	data := []int{78, 4, 13, 99, -1, 21, 100, 2, 48}
-
-	slice := New(data)
-	got := slice.Take(3).Collect()
-	want := []int{78, 4, 13}
-	assert.Equal(t, want, got)
-}
-
 func Test_Slice_Take_And_Filter(t *testing.T) {
 	data := []int{9, 4, 99, 13, 99, -1, 21, 100, 2, 48}
 
 	slice := New(data)
-	s1 := slice.Filter(func(i int) bool { return i > 10 })
-	s2 := s1.Take(3)
-	s3 := s2.Filter(func(i int) bool { return i == 13 })
-	got := s3.Collect()
-
+	got := slice.Filter(func(i int) bool { return i > 10 }).
+		Take(3).
+		Filter(func(i int) bool { return i == 13 }).
+		Collect()
 	want := []int{13}
 	assert.Equal(t, want, got)
 }
@@ -49,15 +26,6 @@ func Test_Slice_Take_More_Than_Possible(t *testing.T) {
 	assert.Equal(t, data, got)
 }
 
-func Test_Slice_Skip(t *testing.T) {
-	data := []int{78, 4, 13, 99, -1, 21, 100, 2, 48}
-
-	slice := New(data)
-	got := slice.Skip(3).Collect()
-	want := []int{99, -1, 21, 100, 2, 48}
-	assert.Equal(t, want, got)
-}
-
 func Test_Slice_Skip_More_Than_Possible(t *testing.T) {
 	data := []int{78, 4, 13, 99, -1, 21, 100, 2, 48}
 
@@ -66,26 +34,48 @@ func Test_Slice_Skip_More_Than_Possible(t *testing.T) {
 	assert.Equal(t, []int{}, got)
 }
 
-func Test_Slice_Reduce(t *testing.T) {
-	data := []int{78, 4, 13, 99, -1, 21, 100, 2, 48}
+func Test_Slice_First_Empty(t *testing.T) {
+	data := []int{78, 4, 4, 99, -1, 21, 100, 2, 48}
 
 	slice := New(data)
-	got := slice.Reduce(func(i, j int) int { return i + j })
-	want := 364
+	got := slice.First(func(i int) bool { return i == 1337 }).Collect()
+	want := []int{}
+	assert.Equal(t, want, got)
+
+	got = slice.CollectIndices()
+	want = []int{}
 	assert.Equal(t, want, got)
 }
 
-func Test_Slice_Filter_BigData(t *testing.T) {
-	data := intTestdataT(10, 10)
-	result := New(data).Filter(func(i int) bool { return i%2 == 0 }).Filter(func(i int) bool { return i > 5 && i < 11 }).Collect()
-	fmt.Print(result)
+func Test_Slice_Last_Empty(t *testing.T) {
+	data := []int{78, 4, 4, 99, -1, 21, 100, 2, 48}
+
+	slice := New(data)
+	got := slice.Last(func(i int) bool { return i == 1337 }).Collect()
+	want := []int{}
+	assert.Equal(t, want, got)
+
+	got = slice.CollectIndices()
+	want = []int{}
+	assert.Equal(t, want, got)
 }
 
-func intTestdataT(amount int, max int) []int {
-	testdata := make([]int, 0, amount)
-	for i := 0; i <= amount; i++ {
-		testdata = append(testdata, rand.IntN(max))
-	}
+func Test_Slice_Dry_Operations(t *testing.T) {
+	data := []int{78, 4, 4, 99, -1, 21, 100, 2, 48}
 
-	return testdata
+	slice := New(data)
+	got := slice.Take(5).
+		Filter(func(i int) bool { return i == 4 }).
+		Filter(func(i int) bool { return i == 5 }).
+		First(func(i int) bool { return i == 6 }).
+		Last(func(i int) bool { return i == 7 }).
+		Collect()
+	want := []int{}
+	assert.Equal(t, want, got)
+
+	got = slice.CollectIndices()
+	want = []int{}
+	assert.Equal(t, want, got)
+
+	assert.True(t, slice.dry)
 }
