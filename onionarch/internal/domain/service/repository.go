@@ -14,11 +14,15 @@ var (
 
 type (
 	SessionRepository interface {
-		CreateSession(ctx context.Context, session model.Session) error
-		LoadSession(ctx context.Context, sessionID string) (model.Session, error)
+		CreateSession(ctx context.Context, session *model.Session) error
+		LoadSession(ctx context.Context, sessionID string) (*model.Session, error)
 	}
 
 	PlayerRepository interface {
-		SavePlayer(ctx context.Context, player model.Player) error
+		SavePlayer(ctx context.Context, player *model.Player) error
+	}
+
+	CharacterRepository interface {
+		SaveCharacter(ctx context.Context, character *model.Character) error
 	}
 )

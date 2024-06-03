@@ -1,4 +1,4 @@
-package handler
+package restful
 
 import (
 	"context"
@@ -30,7 +30,12 @@ func (h *SessionHandler) StartSession(w http.ResponseWriter, r *http.Request) {
 
 func routes() *http.ServeMux {
 	mux := http.NewServeMux()
-	mux.HandleFunc("POST /api/new", nil)
+	mux.HandleFunc("POST /api/start", nil)
 	mux.HandleFunc("POST /api/join/{sessionID}", nil)
 	return mux
+}
+
+// cheap convinient method
+func methodAllowed(want, got string) bool {
+	return want != got
 }

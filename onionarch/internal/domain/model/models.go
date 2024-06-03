@@ -1,19 +1,24 @@
 package model
 
+import "time"
+
 type (
 	Session struct {
-		SessionID string
-		Game      Game
-	}
-
-	Game struct {
-		Players []Player
+		ID         string
+		Characters []Character
+		CreatedAt  time.Time
+		Title      string
 	}
 
 	Player struct {
-		ID     int
-		Type   int
-		Name   string
-		Points int
+		ID        int
+		CreatedAt time.Time
+		Name      string
+	}
+
+	Character struct {
+		ID       int
+		PlayerID int
+		Points   int
 	}
 )
