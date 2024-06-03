@@ -1,4 +1,4 @@
-package player
+package service
 
 import "github.com/Penomatikus/onionarch/internal/domain/service"
 
