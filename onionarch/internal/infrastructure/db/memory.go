@@ -74,13 +74,35 @@ func ProvidePlayerRepository(dbStore *dbStore) repository.PlayerRepository {
 	return &playerRepository{store: dbStore}
 }
 
-func (repo *playerRepository) Save(ctx context.Context, player *model.Player) error {
+func (repo *playerRepository) Create(ctx context.Context, player *model.Player) error {
 	if _, ok := repo.store.player[player.ID]; ok {
 		return repository.ErrAlreadyExists
 	}
 
 	repo.store.player[player.ID] = player
 	return nil
+}
+
+func (repo *playerRepository) Update(ctx context.Context, player *model.Player) error {
+	dbPlayer, ok := repo.store.player[player.ID]
+	if !ok {
+		return repository.ErrNotFound
+	}
+
+	repo.store.player[player.ID] = &model.Player{
+		ID:        dbPlayer.ID,
+		CreatedAt: dbPlayer.CreatedAt,
+		Name:      player.Name,
+	}
+	return nil
+}
+
+func (repo *playerRepository) FindByID(ctx context.Context, ID int) (*model.Player, error) {
+	p, ok := repo.store.player[ID]
+	if !ok {
+		return nil, repository.ErrNotFound
+	}
+	return p, nil
 }
 
 func ProvideCharacterRepository(dbStore *dbStore) repository.CharacterRepository {

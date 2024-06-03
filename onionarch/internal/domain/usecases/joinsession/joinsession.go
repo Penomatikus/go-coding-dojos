@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"github.com/Penomatikus/onionarch/internal/domain/model"
 	"github.com/Penomatikus/onionarch/internal/domain/repository"
+	"github.com/Penomatikus/onionarch/internal/domain/usecases"
 )
 
 type (
@@ -14,12 +14,9 @@ type (
 		CharacterRepo repository.CharacterRepository
 	}
 
-	SessionID   func() model.SessionID
-	CharacterID func() model.CharacterID
-
 	Request struct {
-		SessionID   SessionID
-		CharacterID CharacterID
+		SessionID   usecases.SessionID
+		CharacterID usecases.CharacterID
 	}
 )
 
