@@ -2,20 +2,37 @@ package db
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Penomatikus/onionarch/internal/domain/model"
 	"github.com/Penomatikus/onionarch/internal/domain/repository"
 )
 
 type dbStore struct {
-	character map[model.CharacterID]*model.Character
+	character map[int]*model.Character
 	player    map[int]*model.Player
 	session   map[model.SessionID]*model.Session
 }
 
+const (
+	_CHARACTER = iota
+	_PLAYER
+)
+
+func (db *dbStore) autoIncrement(tableType int) int {
+	switch tableType {
+	case _CHARACTER:
+		return len(db.character) + 1
+	case _PLAYER:
+		return len(db.player) + 1
+	default:
+		panic(fmt.Sprintf("unkown table type %d", tableType))
+	}
+}
+
 func NewDBStore() dbStore {
 	return dbStore{
-		character: make(map[model.CharacterID]*model.Character),
+		character: make(map[int]*model.Character),
 		player:    make(map[int]*model.Player),
 		session:   make(map[model.SessionID]*model.Session),
 	}
@@ -75,7 +92,7 @@ func ProvidePlayerRepository(dbStore *dbStore) repository.PlayerRepository {
 }
 
 func (repo *playerRepository) Create(ctx context.Context, player *model.Player) error {
-	if _, ok := repo.store.player[player.ID]; ok {
+	if _, ok := repo.store.player[repo.store.autoIncrement(_PLAYER)]; ok {
 		return repository.ErrAlreadyExists
 	}
 
@@ -110,7 +127,7 @@ func ProvideCharacterRepository(dbStore *dbStore) repository.CharacterRepository
 }
 
 func (repo *characterRepository) Create(ctx context.Context, character *model.Character) error {
-	if _, ok := repo.store.character[character.ID]; ok {
+	if _, ok := repo.store.character[repo.store.autoIncrement(_CHARACTER)]; ok {
 		return repository.ErrAlreadyExists
 	}
 
@@ -118,7 +135,7 @@ func (repo *characterRepository) Create(ctx context.Context, character *model.Ch
 	return nil
 }
 
-func (repo *characterRepository) FindByID(ctx context.Context, characterID model.CharacterID) (*model.Character, error) {
+func (repo *characterRepository) FindByID(ctx context.Context, characterID int) (*model.Character, error) {
 	c, ok := repo.store.character[characterID]
 	if !ok {
 		return nil, repository.ErrNotFound

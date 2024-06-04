@@ -8,10 +8,12 @@ import (
 
 type (
 	Ports struct {
-		playerRepository repository.PlayerRepository
+		playerRepository    repository.PlayerRepository
+		characterRepository repository.CharacterRepository
 	}
 
-	Request struct{}
+	Request struct {
+	}
 )
 
 func Create(ctx context.Context, ports Ports, reg Request) error {

@@ -3,8 +3,7 @@ package model
 import "time"
 
 type (
-	SessionID   string
-	CharacterID int
+	SessionID string
 
 	Session struct {
 		ID        SessionID
@@ -20,9 +19,11 @@ type (
 	}
 
 	Character struct {
-		ID        CharacterID
-		SessionID *SessionID
-		PlayerID  int
-		Points    int
+		ID          int
+		Name        string
+		Description string
+		SessionID   *SessionID
+		PlayerID    int
+		Points      int
 	}
 )

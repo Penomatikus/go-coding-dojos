@@ -28,6 +28,6 @@ type (
 	CharacterRepository interface {
 		Create(ctx context.Context, character *model.Character) error
 		Update(ctx context.Context, character *model.Character) error
-		FindByID(ctx context.Context, characterID model.CharacterID) (*model.Character, error)
+		FindByID(ctx context.Context, ID int) (*model.Character, error)
 	}
 )

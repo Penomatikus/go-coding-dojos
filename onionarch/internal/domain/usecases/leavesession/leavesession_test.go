@@ -20,7 +20,7 @@ func Test_Leave_Succes(t *testing.T) {
 		Title:     "Test Session",
 	}
 
-	charID := model.CharacterID(1)
+	charID := 1
 	db.Character[charID] = &model.Character{
 		ID:        1,
 		SessionID: &sessionID,
@@ -35,7 +35,7 @@ func Test_Leave_Succes(t *testing.T) {
 
 	err := Leave(context.Background(), ports, Request{
 		SessionID:   func() model.SessionID { return sessionID },
-		CharacterID: func() model.CharacterID { return charID },
+		CharacterID: charID,
 	})
 
 	if err != nil {

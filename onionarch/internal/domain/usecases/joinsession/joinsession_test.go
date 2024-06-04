@@ -18,7 +18,7 @@ func Test_JoinSession_Success(t *testing.T) {
 		Title:     "Test Session",
 	}
 
-	charID := model.CharacterID(1)
+	charID := 1
 	db.Character[charID] = &model.Character{
 		ID:       1,
 		PlayerID: 1,
@@ -32,7 +32,7 @@ func Test_JoinSession_Success(t *testing.T) {
 
 	err := Join(context.Background(), ports, Request{
 		SessionID:   func() model.SessionID { return "1337" },
-		CharacterID: func() model.CharacterID { return 1 },
+		CharacterID: 1,
 	})
 
 	if err != nil {

@@ -15,7 +15,7 @@ type (
 
 	Request struct {
 		SessionID   usecases.SessionID
-		CharacterID usecases.CharacterID
+		CharacterID int
 	}
 )
 
@@ -25,7 +25,7 @@ func Leave(ctx context.Context, ports Ports, req Request) error {
 		return err
 	}
 
-	char, err := ports.CharacterRepo.FindByID(ctx, req.CharacterID())
+	char, err := ports.CharacterRepo.FindByID(ctx, req.CharacterID)
 	if err != nil {
 		return err
 	}
