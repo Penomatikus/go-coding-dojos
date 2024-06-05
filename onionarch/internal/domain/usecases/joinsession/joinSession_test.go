@@ -1,4 +1,4 @@
-package leavesession
+package joinsession
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"github.com/Penomatikus/onionarch/internal/domain/repository/repositorytest"
 )
 
-func Test_Leave_Succes(t *testing.T) {
+func Test_JoinSession_Success(t *testing.T) {
 	db := repositorytest.NewDBStore()
 
 	sessionID := model.SessionID("1337")
@@ -22,10 +22,9 @@ func Test_Leave_Succes(t *testing.T) {
 
 	charID := 1
 	db.Character[charID] = &model.Character{
-		ID:        1,
-		SessionID: &sessionID,
-		PlayerID:  1,
-		Points:    100,
+		ID:       1,
+		PlayerID: 1,
+		Points:   100,
 	}
 
 	ports := Ports{
@@ -33,16 +32,22 @@ func Test_Leave_Succes(t *testing.T) {
 		CharacterRepository: repositorytest.ProvideCharacterRepository(&db),
 	}
 
-	err := Leave(context.Background(), ports, Request{
-		SessionID:   func() model.SessionID { return sessionID },
-		CharacterID: charID,
+	err := Join(context.Background(), ports, Request{
+		SessionID:   model.SessionID("1337"),
+		CharacterID: 1,
 	})
 
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if db.Character[charID].SessionID != nil {
-		t.Fatalf("id was %d expected %s", db.Character[charID].SessionID, "nil")
+	character, err := ports.CharacterRepository.FindByID(context.Background(), 1)
+	if err != nil {
+		t.Fatal(err)
 	}
+
+	if *character.SessionID != sessionID {
+		t.Fatalf("id was %v expected %v", character.SessionID, sessionID)
+	}
+
 }

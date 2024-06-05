@@ -1,11 +1,10 @@
-package joinsession
+package leavesession
 
 import (
 	"context"
-	"errors"
 
+	"github.com/Penomatikus/onionarch/internal/domain/model"
 	"github.com/Penomatikus/onionarch/internal/domain/repository"
-	"github.com/Penomatikus/onionarch/internal/domain/usecases"
 )
 
 type (
@@ -15,15 +14,13 @@ type (
 	}
 
 	Request struct {
-		SessionID   usecases.SessionID
+		SessionID   model.SessionID
 		CharacterID int
 	}
 )
 
-var ErrAnotherSession = errors.New("already in another session")
-
-func Join(ctx context.Context, ports Ports, req Request) error {
-	session, err := ports.SessionRepository.FindByID(ctx, req.SessionID())
+func Leave(ctx context.Context, ports Ports, req Request) error {
+	_, err := ports.SessionRepository.FindByID(ctx, req.SessionID)
 	if err != nil {
 		return err
 	}
@@ -33,11 +30,8 @@ func Join(ctx context.Context, ports Ports, req Request) error {
 		return err
 	}
 
-	if char.SessionID != nil {
-		return ErrAnotherSession
-	}
-
-	char.SessionID = &session.ID
+	char.SessionID = nil
 	ports.CharacterRepository.Update(ctx, char)
+
 	return nil
 }

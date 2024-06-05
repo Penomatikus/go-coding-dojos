@@ -39,13 +39,13 @@ func (db *dbStore) autoIncrement(tableType int) int {
 }
 
 type (
-	CharacterRepository struct{ store *dbStore }
+	characterRepository struct{ store *dbStore }
 	playerRepository    struct{ store *dbStore }
 	sessionRepository   struct{ store *dbStore }
 )
 
 var (
-	_ repository.CharacterRepository = &CharacterRepository{}
+	_ repository.CharacterRepository = &characterRepository{}
 	_ repository.PlayerRepository    = &playerRepository{}
 	_ repository.SessionRepository   = &sessionRepository{}
 )
@@ -123,10 +123,10 @@ func (repo *playerRepository) FindByID(ctx context.Context, ID int) (*model.Play
 }
 
 func ProvideCharacterRepository(dbStore *dbStore) repository.CharacterRepository {
-	return &CharacterRepository{store: dbStore}
+	return &characterRepository{store: dbStore}
 }
 
-func (repo *CharacterRepository) Create(ctx context.Context, Character *model.Character) error {
+func (repo *characterRepository) Create(ctx context.Context, Character *model.Character) error {
 	if _, ok := repo.store.Character[repo.store.autoIncrement(_CHARACTER)]; ok {
 		return repository.ErrAlreadyExists
 	}
@@ -135,7 +135,7 @@ func (repo *CharacterRepository) Create(ctx context.Context, Character *model.Ch
 	return nil
 }
 
-func (repo *CharacterRepository) FindByID(ctx context.Context, characterID int) (*model.Character, error) {
+func (repo *characterRepository) FindByID(ctx context.Context, characterID int) (*model.Character, error) {
 	c, ok := repo.store.Character[characterID]
 	if !ok {
 		return nil, repository.ErrNotFound
@@ -143,7 +143,7 @@ func (repo *CharacterRepository) FindByID(ctx context.Context, characterID int) 
 	return c, nil
 }
 
-func (repo *CharacterRepository) Update(ctx context.Context, character *model.Character) error {
+func (repo *characterRepository) Update(ctx context.Context, character *model.Character) error {
 	_, ok := repo.store.Character[character.ID]
 	if !ok {
 		return repository.ErrNotFound
