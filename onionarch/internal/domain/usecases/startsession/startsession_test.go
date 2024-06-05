@@ -4,18 +4,19 @@ import (
 	"context"
 	"testing"
 
-	"github.com/Penomatikus/onionarch/internal/domain/model"
 	repositorytest_test "github.com/Penomatikus/onionarch/internal/domain/repository/repositorytest"
+	"github.com/Penomatikus/onionarch/internal/domain/sessionid/sessionidtest"
 )
 
 func Test_StartSession_Success(t *testing.T) {
 	db := repositorytest_test.NewDBStore()
+
 	ports := Ports{
-		SessionRepository: repositorytest_test.ProvideSessionRepository(&db),
+		SessionRepository:  repositorytest_test.ProvideSessionRepository(&db),
+		SessionIDGenerator: sessionidtest.ProvideSessionIDGen(),
 	}
 
 	request := Request{
-		ID:      func() model.SessionID { return "testID" },
 		Title:   "Test Session",
 		OwnerID: 1337,
 	}

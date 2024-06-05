@@ -6,23 +6,27 @@ import (
 
 	"github.com/Penomatikus/onionarch/internal/domain/model"
 	"github.com/Penomatikus/onionarch/internal/domain/repository"
+	"github.com/Penomatikus/onionarch/internal/domain/sessionid"
 )
 
 type (
-	SessionID func() model.SessionID
-	Request   struct {
-		ID      SessionID
+	Request struct {
 		Title   string
 		OwnerID int
 	}
 
 	Ports struct {
-		SessionRepository repository.SessionRepository
+		SessionRepository  repository.SessionRepository
+		SessionIDGenerator sessionid.Generator
 	}
 )
 
 func Start(ctx context.Context, ports Ports, req Request) (*model.SessionID, error) {
-	sessionID := req.ID()
+	sessionID, err := ports.SessionIDGenerator.GenerateSessionID()
+	if err != nil {
+		return nil, err
+	}
+
 	return &sessionID, ports.SessionRepository.Create(ctx, &model.Session{
 		ID:        sessionID,
 		CreatedAt: time.Now(),

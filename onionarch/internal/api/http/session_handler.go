@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/Penomatikus/onionarch/internal/domain/model"
 	"github.com/Penomatikus/onionarch/internal/domain/repository"
+	"github.com/Penomatikus/onionarch/internal/domain/sessionid"
 	"github.com/Penomatikus/onionarch/internal/domain/usecases/startsession"
 )
 
@@ -16,18 +16,21 @@ type startRequest struct {
 	OwnerID int    `json:"owner_id"`
 }
 
-type SessionManager struct {
-	ctx        context.Context
-	repository repository.SessionRepository
+type SessionHandler struct {
+	ctx          context.Context
+	repository   repository.SessionRepository
+	sessionIDGen sessionid.Generator
 }
 
-func ProvideSessionmanager(ctx context.Context, repository repository.SessionRepository) *SessionManager {
-	return &SessionManager{
-		ctx: ctx,
+func ProvideSessionmanager(ctx context.Context, repository repository.SessionRepository, sessionIDGen sessionid.Generator) *SessionHandler {
+	return &SessionHandler{
+		ctx:          ctx,
+		repository:   repository,
+		sessionIDGen: sessionIDGen,
 	}
 }
 
-func (mgr *SessionManager) StartSession(w http.ResponseWriter, r *http.Request) {
+func (mgr *SessionHandler) StartSession(w http.ResponseWriter, r *http.Request) {
 	if !methodAllowed(http.MethodPost, r.Method) {
 		http.Error(w, "method not allowed", http.StatusBadRequest)
 		return
@@ -39,8 +42,12 @@ func (mgr *SessionManager) StartSession(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	id, err := startsession.Start(mgr.ctx, startsession.Ports{SessionRepo: mgr.repository}, startsession.Request{
-		ID:      func() model.SessionID { return "TODO " },
+	startsessionPorts := startsession.Ports{
+		SessionRepository:  mgr.repository,
+		SessionIDGenerator: mgr.sessionIDGen,
+	}
+
+	id, err := startsession.Start(mgr.ctx, startsessionPorts, startsession.Request{
 		Title:   req.Title,
 		OwnerID: req.OwnerID,
 	})
@@ -53,4 +60,8 @@ func (mgr *SessionManager) StartSession(w http.ResponseWriter, r *http.Request) 
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("application", "plain/text")
 	fmt.Fprint(w, id)
+}
+
+func (mgr *SessionHandler) JoinSession(w *http.ResponseWriter, r *http.Request) {
+
 }
