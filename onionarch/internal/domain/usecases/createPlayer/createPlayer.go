@@ -3,20 +3,16 @@ package createplayer
 import (
 	"context"
 
+	"github.com/Penomatikus/onionarch/internal/domain/model"
 	"github.com/Penomatikus/onionarch/internal/domain/repository"
 )
 
-type (
-	Ports struct {
-		playerRepository    repository.PlayerRepository
-		characterRepository repository.CharacterRepository
-	}
+type Ports struct {
+	playerRepository repository.PlayerRepository
+}
 
-	Request struct {
-	}
-)
-
-func Create(ctx context.Context, ports Ports, reg Request) error {
-
-	return nil
+func Create(ctx context.Context, ports Ports, playerName string) error {
+	return ports.playerRepository.Create(ctx, &model.Player{
+		Name: playerName,
+	})
 }

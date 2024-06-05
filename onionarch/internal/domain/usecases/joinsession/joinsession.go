@@ -10,8 +10,8 @@ import (
 
 type (
 	Ports struct {
-		SessionRepo   repository.SessionRepository
-		CharacterRepo repository.CharacterRepository
+		SessionRepository   repository.SessionRepository
+		CharacterRepository repository.CharacterRepository
 	}
 
 	Request struct {
@@ -23,12 +23,12 @@ type (
 var ErrAnotherSession = errors.New("already in another session")
 
 func Join(ctx context.Context, ports Ports, req Request) error {
-	session, err := ports.SessionRepo.FindByID(ctx, req.SessionID())
+	session, err := ports.SessionRepository.FindByID(ctx, req.SessionID())
 	if err != nil {
 		return err
 	}
 
-	char, err := ports.CharacterRepo.FindByID(ctx, req.CharacterID)
+	char, err := ports.CharacterRepository.FindByID(ctx, req.CharacterID)
 	if err != nil {
 		return err
 	}
@@ -38,6 +38,6 @@ func Join(ctx context.Context, ports Ports, req Request) error {
 	}
 
 	char.SessionID = &session.ID
-	ports.CharacterRepo.Update(ctx, char)
+	ports.CharacterRepository.Update(ctx, char)
 	return nil
 }

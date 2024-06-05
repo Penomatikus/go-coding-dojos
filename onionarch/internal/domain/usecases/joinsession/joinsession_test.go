@@ -11,7 +11,9 @@ import (
 
 func Test_JoinSession_Success(t *testing.T) {
 	db := repositorytest.NewDBStore()
-	db.Session["1337"] = &model.Session{
+
+	sessionID := model.SessionID("1337")
+	db.Session[sessionID] = &model.Session{
 		ID:        "1337",
 		Owner:     1337,
 		CreatedAt: time.Now(),
@@ -26,8 +28,8 @@ func Test_JoinSession_Success(t *testing.T) {
 	}
 
 	ports := Ports{
-		SessionRepo:   repositorytest.ProvideSessionRepository(&db),
-		CharacterRepo: repositorytest.ProvideCharacterRepository(&db),
+		SessionRepository:   repositorytest.ProvideSessionRepository(&db),
+		CharacterRepository: repositorytest.ProvideCharacterRepository(&db),
 	}
 
 	err := Join(context.Background(), ports, Request{
@@ -39,20 +41,13 @@ func Test_JoinSession_Success(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	character, err := ports.CharacterRepo.FindByID(context.Background(), 1)
+	character, err := ports.CharacterRepository.FindByID(context.Background(), 1)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if character.ID != 1 {
-		t.Fatalf("id was %d expected %d", character.ID, 1)
+	if *character.SessionID != sessionID {
+		t.Fatalf("id was %v expected %v", character.SessionID, sessionID)
 	}
 
-	if character.PlayerID != 1 {
-		t.Fatalf("id was %d expected %d", character.ID, 1)
-	}
-
-	if character.Points != 100 {
-		t.Fatalf("id was %d expected %d", character.ID, 100)
-	}
 }

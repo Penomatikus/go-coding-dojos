@@ -17,13 +17,13 @@ type (
 	}
 
 	Ports struct {
-		SessionRepo repository.SessionRepository
+		SessionRepository repository.SessionRepository
 	}
 )
 
 func Start(ctx context.Context, ports Ports, req Request) (*model.SessionID, error) {
 	sessionID := req.ID()
-	return &sessionID, ports.SessionRepo.Create(ctx, &model.Session{
+	return &sessionID, ports.SessionRepository.Create(ctx, &model.Session{
 		ID:        sessionID,
 		CreatedAt: time.Now(),
 		Title:     req.Title,

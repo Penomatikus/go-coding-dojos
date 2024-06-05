@@ -11,7 +11,7 @@ import (
 func Test_StartSession_Success(t *testing.T) {
 	db := repositorytest_test.NewDBStore()
 	ports := Ports{
-		SessionRepo: repositorytest_test.ProvideSessionRepository(&db),
+		SessionRepository: repositorytest_test.ProvideSessionRepository(&db),
 	}
 
 	request := Request{
@@ -25,7 +25,7 @@ func Test_StartSession_Success(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	got, err := ports.SessionRepo.FindByID(context.Background(), *sessionID)
+	got, err := ports.SessionRepository.FindByID(context.Background(), *sessionID)
 	if err != nil {
 		t.Fatal(err)
 	}

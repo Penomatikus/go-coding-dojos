@@ -29,8 +29,8 @@ func Test_Leave_Succes(t *testing.T) {
 	}
 
 	ports := Ports{
-		SessionRepo:   repositorytest.ProvideSessionRepository(&db),
-		CharacterRepo: repositorytest.ProvideCharacterRepository(&db),
+		SessionRepository:   repositorytest.ProvideSessionRepository(&db),
+		CharacterRepository: repositorytest.ProvideCharacterRepository(&db),
 	}
 
 	err := Leave(context.Background(), ports, Request{

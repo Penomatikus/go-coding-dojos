@@ -9,8 +9,8 @@ import (
 
 type (
 	Ports struct {
-		playerRepository    repository.PlayerRepository
-		characterRepository repository.CharacterRepository
+		PlayerRepository    repository.PlayerRepository
+		CharacterRepository repository.CharacterRepository
 	}
 
 	Request struct {
@@ -20,12 +20,12 @@ type (
 )
 
 func Create(ctx context.Context, ports Ports, reg Request) error {
-	_, err := ports.playerRepository.FindByID(ctx, reg.PlayerID)
+	_, err := ports.PlayerRepository.FindByID(ctx, reg.PlayerID)
 	if err != nil {
 		return err
 	}
 
-	return ports.characterRepository.Create(ctx, &model.Character{
+	return ports.CharacterRepository.Create(ctx, &model.Character{
 		Name:        reg.Name,
 		Description: reg.Description,
 		PlayerID:    reg.PlayerID,
