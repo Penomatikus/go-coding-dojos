@@ -3,6 +3,7 @@ package notification
 import (
 	"context"
 	"encoding/json"
+	"time"
 
 	"github.com/Penomatikus/onionarch/internal/domain/model"
 	"github.com/Penomatikus/onionarch/internal/domain/notification"
@@ -24,6 +25,8 @@ func (s *SinkService) Send(ctx context.Context, data []byte) error {
 	if err != nil {
 		return err
 	}
+
+	note.CreatedAt = time.Now()
 	s.Notifications[note.SessionId] = append(s.Notifications[note.SessionId], note)
 	return nil
 }

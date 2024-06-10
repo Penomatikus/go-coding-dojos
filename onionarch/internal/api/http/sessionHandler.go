@@ -205,13 +205,15 @@ func (handler *sessionHandler) receiveNotification(w http.ResponseWriter, r *htt
 		return
 	}
 
-	var offset int
-	if err := json.NewDecoder(r.Body).Decode(&offset); err != nil {
+	var request struct {
+		Offset int
+	}
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		http.Error(w, fmt.Sprintf("error parsing request body: %v", err), http.StatusBadRequest)
 		return
 	}
 
-	sessionNotifications, err := handler.notificationService.Receive(handler.ctx, model.SessionID(sessionID), offset)
+	sessionNotifications, err := handler.notificationService.Receive(handler.ctx, model.SessionID(sessionID), request.Offset)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("error leaving session: %v", err), http.StatusBadRequest)
 		return

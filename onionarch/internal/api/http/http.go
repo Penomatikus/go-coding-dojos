@@ -29,5 +29,5 @@ package http
 
 // cheap convinient method
 func methodAllowed(want, got string) bool {
-	return want != got
+	return want == got
 }
