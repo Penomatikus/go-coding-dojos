@@ -29,24 +29,24 @@ func ProvidesessionHandler(ctx context.Context, repository repository.SessionRep
 	}
 }
 
-// route: /api/fatecore/start
+// route: /api/v1/fatecore/session/new
 func (mgr *sessionHandler) StartSession(w http.ResponseWriter, r *http.Request) {
 	mgr.startSession(w, r)
 }
 
-// route: /api/fatecore/join/{sessionid}
+// route: /api/v1/fatecore/session/join/{sessionid}
 func (mgr *sessionHandler) JoinSession(w http.ResponseWriter, r *http.Request) {
 	mgr.joinSession(w, r)
 }
 
-// route: /api/fatecore/leave/{sessionid}
+// route: /api/v1/fatecore/session/leave/{sessionid}
 func (mgr *sessionHandler) LeaveSession(w http.ResponseWriter, r *http.Request) {
 	mgr.leaveSession(w, r)
 }
 
 func (mgr *sessionHandler) startSession(w http.ResponseWriter, r *http.Request) {
 	if !methodAllowed(http.MethodPost, r.Method) {
-		http.Error(w, "method not allowed", http.StatusBadRequest)
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -82,7 +82,7 @@ func (mgr *sessionHandler) startSession(w http.ResponseWriter, r *http.Request) 
 
 func (mgr *sessionHandler) joinSession(w http.ResponseWriter, r *http.Request) {
 	if !methodAllowed(http.MethodPost, r.Method) {
-		http.Error(w, "method not allowed", http.StatusBadRequest)
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -112,7 +112,7 @@ func (mgr *sessionHandler) joinSession(w http.ResponseWriter, r *http.Request) {
 
 func (mgr *sessionHandler) leaveSession(w http.ResponseWriter, r *http.Request) {
 	if !methodAllowed(http.MethodPost, r.Method) {
-		http.Error(w, "method not allowed", http.StatusBadRequest)
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 

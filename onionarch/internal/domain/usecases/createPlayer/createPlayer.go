@@ -8,11 +8,11 @@ import (
 )
 
 type Ports struct {
-	playerRepository repository.PlayerRepository
+	PlayerRepository repository.PlayerRepository
 }
 
 func Create(ctx context.Context, ports Ports, playerName string) error {
-	return ports.playerRepository.Create(ctx, &model.Player{
+	return ports.PlayerRepository.Create(ctx, &model.Player{
 		Name: playerName,
 	})
 }
