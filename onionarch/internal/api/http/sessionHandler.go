@@ -4,9 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/Penomatikus/onionarch/internal/domain/model"
+	"github.com/Penomatikus/onionarch/internal/domain/notification"
 	"github.com/Penomatikus/onionarch/internal/domain/repository"
 	"github.com/Penomatikus/onionarch/internal/domain/sessionid"
 	"github.com/Penomatikus/onionarch/internal/domain/usecases/joinsession"
@@ -16,35 +18,53 @@ import (
 
 type sessionHandler struct {
 	ctx                 context.Context
-	sessionRepository   repository.SessionRepository
 	characterRepository repository.CharacterRepository
+	notificationService notification.Service
 	sessionIDGen        sessionid.Generator
+	sessionRepository   repository.SessionRepository
 }
 
-func ProvidesessionHandler(ctx context.Context, repository repository.SessionRepository, sessionIDGen sessionid.Generator) *sessionHandler {
+func ProvidesessionHandler(ctx context.Context,
+	characterRepository repository.CharacterRepository,
+	notificationService notification.Service,
+	sessionIDGen sessionid.Generator,
+	sessionRepository repository.SessionRepository,
+) *sessionHandler {
 	return &sessionHandler{
-		ctx:               ctx,
-		sessionRepository: repository,
-		sessionIDGen:      sessionIDGen,
+		ctx:                 ctx,
+		characterRepository: characterRepository,
+		notificationService: notificationService,
+		sessionIDGen:        sessionIDGen,
+		sessionRepository:   sessionRepository,
 	}
 }
 
 // route: /api/v1/fatecore/session/new
-func (mgr *sessionHandler) StartSession(w http.ResponseWriter, r *http.Request) {
-	mgr.startSession(w, r)
+func (handler *sessionHandler) StartSession(w http.ResponseWriter, r *http.Request) {
+	handler.startSession(w, r)
 }
 
-// route: /api/v1/fatecore/session/join/{sessionid}
-func (mgr *sessionHandler) JoinSession(w http.ResponseWriter, r *http.Request) {
-	mgr.joinSession(w, r)
+// route: /api/v1/fatecore/session/{sessionid}/join
+func (handler *sessionHandler) JoinSession(w http.ResponseWriter, r *http.Request) {
+	handler.joinSession(w, r)
 }
 
-// route: /api/v1/fatecore/session/leave/{sessionid}
-func (mgr *sessionHandler) LeaveSession(w http.ResponseWriter, r *http.Request) {
-	mgr.leaveSession(w, r)
+// route: /api/v1/fatecore/session/{sessionid}/leave
+func (handler *sessionHandler) LeaveSession(w http.ResponseWriter, r *http.Request) {
+	handler.leaveSession(w, r)
 }
 
-func (mgr *sessionHandler) startSession(w http.ResponseWriter, r *http.Request) {
+// route: /api/v1/fatecore/session/{sessionid}/notification POST
+func (handler *sessionHandler) SendNotification(w http.ResponseWriter, r *http.Request) {
+	handler.sendNotification(w, r)
+}
+
+// // route: /api/v1/fatecore/session/{sessionid}/notification GET
+func (handler *sessionHandler) ReceiveNotification(w http.ResponseWriter, r *http.Request) {
+	handler.receiveNotification(w, r)
+}
+
+func (handler *sessionHandler) startSession(w http.ResponseWriter, r *http.Request) {
 	if !methodAllowed(http.MethodPost, r.Method) {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -61,11 +81,11 @@ func (mgr *sessionHandler) startSession(w http.ResponseWriter, r *http.Request) 
 	}
 
 	startsessionPorts := startsession.Ports{
-		SessionRepository:  mgr.sessionRepository,
-		SessionIDGenerator: mgr.sessionIDGen,
+		SessionRepository:  handler.sessionRepository,
+		SessionIDGenerator: handler.sessionIDGen,
 	}
 
-	id, err := startsession.Start(mgr.ctx, startsessionPorts, startsession.Request{
+	id, err := startsession.Start(handler.ctx, startsessionPorts, startsession.Request{
 		Title:   req.Title,
 		OwnerID: req.OwnerID,
 	})
@@ -80,7 +100,7 @@ func (mgr *sessionHandler) startSession(w http.ResponseWriter, r *http.Request) 
 	fmt.Fprint(w, id)
 }
 
-func (mgr *sessionHandler) joinSession(w http.ResponseWriter, r *http.Request) {
+func (handler *sessionHandler) joinSession(w http.ResponseWriter, r *http.Request) {
 	if !methodAllowed(http.MethodPost, r.Method) {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -93,12 +113,18 @@ func (mgr *sessionHandler) joinSession(w http.ResponseWriter, r *http.Request) {
 	}
 
 	joinSessionPorts := joinsession.Ports{
-		SessionRepository:   mgr.sessionRepository,
-		CharacterRepository: mgr.characterRepository,
+		SessionRepository:   handler.sessionRepository,
+		CharacterRepository: handler.characterRepository,
 	}
 
-	err := joinsession.Join(mgr.ctx, joinSessionPorts, joinsession.Request{
-		SessionID:   model.SessionID(r.PathValue("sessionid")),
+	sessionID := r.PathValue("sessionid")
+	if len(sessionID) == 0 {
+		http.Error(w, "error while reading session id from path", http.StatusInternalServerError)
+		return
+	}
+
+	err := joinsession.Join(handler.ctx, joinSessionPorts, joinsession.Request{
+		SessionID:   model.SessionID(sessionID),
 		CharacterID: characterID,
 	})
 
@@ -110,7 +136,7 @@ func (mgr *sessionHandler) joinSession(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (mgr *sessionHandler) leaveSession(w http.ResponseWriter, r *http.Request) {
+func (handler *sessionHandler) leaveSession(w http.ResponseWriter, r *http.Request) {
 	if !methodAllowed(http.MethodPost, r.Method) {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -123,12 +149,18 @@ func (mgr *sessionHandler) leaveSession(w http.ResponseWriter, r *http.Request) 
 	}
 
 	leaveSessionPorts := leavesession.Ports{
-		SessionRepository:   mgr.sessionRepository,
-		CharacterRepository: mgr.characterRepository,
+		SessionRepository:   handler.sessionRepository,
+		CharacterRepository: handler.characterRepository,
 	}
 
-	err := leavesession.Leave(mgr.ctx, leaveSessionPorts, leavesession.Request{
-		SessionID:   model.SessionID(r.PathValue("sessionid")),
+	sessionID := r.PathValue("sessionid")
+	if len(sessionID) == 0 {
+		http.Error(w, "error while reading session id from path", http.StatusInternalServerError)
+		return
+	}
+
+	err := leavesession.Leave(handler.ctx, leaveSessionPorts, leavesession.Request{
+		SessionID:   model.SessionID(sessionID),
 		CharacterID: characterID,
 	})
 
@@ -137,5 +169,60 @@ func (mgr *sessionHandler) leaveSession(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	w.WriteHeader(http.StatusOK)
+}
+
+func (handler *sessionHandler) sendNotification(w http.ResponseWriter, r *http.Request) {
+	if !methodAllowed(http.MethodPost, r.Method) {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("error reading body from request: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	err = handler.notificationService.Send(handler.ctx, body)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("error seinding notification to session: %v", err), http.StatusBadRequest)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func (handler *sessionHandler) receiveNotification(w http.ResponseWriter, r *http.Request) {
+	if !methodAllowed(http.MethodGet, r.Method) {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	sessionID := r.PathValue("sessionid")
+	if len(sessionID) == 0 {
+		http.Error(w, "error while reading session id from path", http.StatusInternalServerError)
+		return
+	}
+
+	var offset int
+	if err := json.NewDecoder(r.Body).Decode(&offset); err != nil {
+		http.Error(w, fmt.Sprintf("error parsing request body: %v", err), http.StatusBadRequest)
+		return
+	}
+
+	sessionNotifications, err := handler.notificationService.Receive(handler.ctx, model.SessionID(sessionID), offset)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("error leaving session: %v", err), http.StatusBadRequest)
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(sessionNotifications)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("error encoding notifications session: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 }

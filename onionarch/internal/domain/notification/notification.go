@@ -1,9 +1,12 @@
-package service
+package notification
 
 import (
 	"context"
+
+	"github.com/Penomatikus/onionarch/internal/domain/model"
 )
 
-type Notification interface {
-	Notifiy(ctx context.Context, data []byte)
+type Service interface {
+	Send(ctx context.Context, data []byte) error
+	Receive(ctx context.Context, id model.SessionID, offset int) ([]model.Notification, error)
 }

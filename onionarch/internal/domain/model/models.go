@@ -26,4 +26,11 @@ type (
 		PlayerID    int
 		Points      int
 	}
+
+	Notification struct {
+		CreatedAt time.Time
+		SessionId SessionID
+		FromId    int
+		Body      string
+	}
 )
