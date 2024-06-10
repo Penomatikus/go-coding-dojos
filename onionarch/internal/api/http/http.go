@@ -1,4 +1,4 @@
-package restful
+package http
 
 // type SessionHandler struct {
 // 	sessionService service.Session

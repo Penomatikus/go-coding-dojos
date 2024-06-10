@@ -1,4 +1,4 @@
-package restful
+package http
 
 import (
 	"context"
@@ -14,15 +14,15 @@ import (
 	"github.com/Penomatikus/onionarch/internal/domain/usecases/startsession"
 )
 
-type SessionHandler struct {
+type sessionHandler struct {
 	ctx                 context.Context
 	sessionRepository   repository.SessionRepository
 	characterRepository repository.CharacterRepository
 	sessionIDGen        sessionid.Generator
 }
 
-func ProvideSessionmanager(ctx context.Context, repository repository.SessionRepository, sessionIDGen sessionid.Generator) *SessionHandler {
-	return &SessionHandler{
+func ProvidesessionHandler(ctx context.Context, repository repository.SessionRepository, sessionIDGen sessionid.Generator) *sessionHandler {
+	return &sessionHandler{
 		ctx:               ctx,
 		sessionRepository: repository,
 		sessionIDGen:      sessionIDGen,
@@ -30,21 +30,21 @@ func ProvideSessionmanager(ctx context.Context, repository repository.SessionRep
 }
 
 // route: /api/fatecore/start
-func (mgr *SessionHandler) StartSession(w http.ResponseWriter, r *http.Request) {
+func (mgr *sessionHandler) StartSession(w http.ResponseWriter, r *http.Request) {
 	mgr.startSession(w, r)
 }
 
 // route: /api/fatecore/join/{sessionid}
-func (mgr *SessionHandler) JoinSession(w http.ResponseWriter, r *http.Request) {
+func (mgr *sessionHandler) JoinSession(w http.ResponseWriter, r *http.Request) {
 	mgr.joinSession(w, r)
 }
 
 // route: /api/fatecore/leave/{sessionid}
-func (mgr *SessionHandler) LeaveSession(w http.ResponseWriter, r *http.Request) {
+func (mgr *sessionHandler) LeaveSession(w http.ResponseWriter, r *http.Request) {
 	mgr.leaveSession(w, r)
 }
 
-func (mgr *SessionHandler) startSession(w http.ResponseWriter, r *http.Request) {
+func (mgr *sessionHandler) startSession(w http.ResponseWriter, r *http.Request) {
 	if !methodAllowed(http.MethodPost, r.Method) {
 		http.Error(w, "method not allowed", http.StatusBadRequest)
 		return
@@ -80,7 +80,7 @@ func (mgr *SessionHandler) startSession(w http.ResponseWriter, r *http.Request) 
 	fmt.Fprint(w, id)
 }
 
-func (mgr *SessionHandler) joinSession(w http.ResponseWriter, r *http.Request) {
+func (mgr *sessionHandler) joinSession(w http.ResponseWriter, r *http.Request) {
 	if !methodAllowed(http.MethodPost, r.Method) {
 		http.Error(w, "method not allowed", http.StatusBadRequest)
 		return
@@ -110,7 +110,7 @@ func (mgr *SessionHandler) joinSession(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (mgr *SessionHandler) leaveSession(w http.ResponseWriter, r *http.Request) {
+func (mgr *sessionHandler) leaveSession(w http.ResponseWriter, r *http.Request) {
 	if !methodAllowed(http.MethodPost, r.Method) {
 		http.Error(w, "method not allowed", http.StatusBadRequest)
 		return
