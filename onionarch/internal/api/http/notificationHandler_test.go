@@ -10,20 +10,14 @@ import (
 	"testing"
 
 	"github.com/Penomatikus/onionarch/internal/domain/model"
-	"github.com/Penomatikus/onionarch/internal/infrastructure/db"
 	"github.com/Penomatikus/onionarch/internal/infrastructure/notification"
-	"github.com/Penomatikus/onionarch/internal/infrastructure/sessionid"
 )
 
 func Test_SendNotification(t *testing.T) {
 	ctx := context.Background()
-	dbstrore := db.NewDBStore()
-	sessionHandler := ProvidesessionHandler(
+	notificationHandler := ProvideNotificationHandler(
 		ctx,
-		db.ProvideCharacterRepository(&dbstrore),
-		notification.ProvideNotificationService(),
-		sessionid.ProvideSessionIDGen(),
-		db.ProvideSessionRepository(&dbstrore),
+		notification.PrivideService(),
 	)
 
 	jsonData, err := json.Marshal(model.Notification{
@@ -40,7 +34,7 @@ func Test_SendNotification(t *testing.T) {
 	req := httptest.NewRequest("POST", "/api/v1/fatecore/session/1337/notification", bytes.NewReader(jsonData))
 	rec := httptest.NewRecorder()
 
-	sessionHandler.SendNotification(rec, req)
+	notificationHandler.SendNotification(rec, req)
 
 	res := rec.Result()
 	defer res.Body.Close()
@@ -52,13 +46,9 @@ func Test_SendNotification(t *testing.T) {
 
 func Test_ReceiveNotification(t *testing.T) {
 	ctx := context.Background()
-	dbstrore := db.NewDBStore()
-	sessionHandler := ProvidesessionHandler(
+	notificationHandler := ProvideNotificationHandler(
 		ctx,
-		db.ProvideCharacterRepository(&dbstrore),
-		notification.ProvideNotificationService(),
-		sessionid.ProvideSessionIDGen(),
-		db.ProvideSessionRepository(&dbstrore),
+		notification.PrivideService(),
 	)
 
 	jsonData, err := json.Marshal(model.Notification{
@@ -75,8 +65,7 @@ func Test_ReceiveNotification(t *testing.T) {
 	req := httptest.NewRequest("POST", "/api/v1/fatecore/session/1337/notification", bytes.NewReader(jsonData))
 	rec := httptest.NewRecorder()
 
-	sessionHandler.SendNotification(rec, req)
-
+	notificationHandler.SendNotification(rec, req)
 	res := rec.Result()
 	defer res.Body.Close()
 
@@ -94,7 +83,7 @@ func Test_ReceiveNotification(t *testing.T) {
 	req.SetPathValue("sessionid", "1337")
 	rec = httptest.NewRecorder()
 
-	sessionHandler.ReceiveNotification(rec, req)
+	notificationHandler.ReceiveNotification(rec, req)
 	res = rec.Result()
 	defer res.Body.Close()
 
