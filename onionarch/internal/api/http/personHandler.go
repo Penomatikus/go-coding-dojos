@@ -24,8 +24,7 @@ func ProvidePlayerHandler(ctx context.Context, playerRepository repository.Playe
 
 // route: /api/v1/fatecore/player/new
 func (handler *playerHandler) CreatePlayer(w http.ResponseWriter, r *http.Request) {
-	if !methodAllowed(http.MethodPost, r.Method) {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	if methodAllowed(http.MethodPost, w, r) != nil {
 		return
 	}
 

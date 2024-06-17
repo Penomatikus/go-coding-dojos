@@ -18,8 +18,8 @@ func Test_CreateCharacter_Success(t *testing.T) {
 	}
 
 	ports := Ports{
-		playerRepository:    repositorytest.ProvidePlayerRepository(&db),
-		characterRepository: repositorytest.ProvideCharacterRepository(&db),
+		PlayerRepository:    repositorytest.ProvidePlayerRepository(&db),
+		CharacterRepository: repositorytest.ProvideCharacterRepository(&db),
 	}
 
 	err := Create(context.Background(), ports, Request{
@@ -32,7 +32,7 @@ func Test_CreateCharacter_Success(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	character, err := ports.characterRepository.FindByID(context.Background(), 1)
+	character, err := ports.CharacterRepository.FindByID(context.Background(), 1)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -2,7 +2,6 @@ package http
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -54,18 +53,12 @@ func (handler *sessionHandler) LeaveSession(w http.ResponseWriter, r *http.Reque
 }
 
 func (handler *sessionHandler) startSession(w http.ResponseWriter, r *http.Request) {
-	if !methodAllowed(http.MethodPost, r.Method) {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	if methodAllowed(http.MethodPost, w, r) != nil {
 		return
 	}
 
-	var req struct {
-		Title   string `json:"title"`
-		OwnerID int    `json:"owner_id"`
-	}
-
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, fmt.Sprintf("error parsing request body: %v", err), http.StatusBadRequest)
+	var request startsession.Request
+	if err := decodeRequest(&request, w, r); err != nil {
 		return
 	}
 
@@ -74,11 +67,7 @@ func (handler *sessionHandler) startSession(w http.ResponseWriter, r *http.Reque
 		SessionIDGenerator: handler.sessionIDGen,
 	}
 
-	id, err := startsession.Start(handler.ctx, startsessionPorts, startsession.Request{
-		Title:   req.Title,
-		OwnerID: req.OwnerID,
-	})
-
+	id, err := startsession.Start(handler.ctx, startsessionPorts, request)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("error creating new session: %v", err), http.StatusBadRequest)
 		return
@@ -90,32 +79,26 @@ func (handler *sessionHandler) startSession(w http.ResponseWriter, r *http.Reque
 }
 
 func (handler *sessionHandler) joinSession(w http.ResponseWriter, r *http.Request) {
-	if !methodAllowed(http.MethodPost, r.Method) {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	if methodAllowed(http.MethodPost, w, r) != nil {
 		return
 	}
 
-	var characterID int
-	if err := json.NewDecoder(r.Body).Decode(&characterID); err != nil {
-		http.Error(w, fmt.Sprintf("error parsing request body: %v", err), http.StatusBadRequest)
+	var request joinsession.Request
+	if err := decodeRequest(&request, w, r); err != nil {
 		return
 	}
 
-	joinSessionPorts := joinsession.Ports{
+	sID, ok := pathValues(r, "sessionid")["sessionid"]
+	if !ok {
+		http.Error(w, "error while reading session id from path", http.StatusBadRequest)
+		return
+	}
+	request.SessionID = model.SessionID(sID)
+
+	err := joinsession.Join(handler.ctx, joinsession.Ports{
 		SessionRepository:   handler.sessionRepository,
 		CharacterRepository: handler.characterRepository,
-	}
-
-	sessionID := r.PathValue("sessionid")
-	if len(sessionID) == 0 {
-		http.Error(w, "error while reading session id from path", http.StatusInternalServerError)
-		return
-	}
-
-	err := joinsession.Join(handler.ctx, joinSessionPorts, joinsession.Request{
-		SessionID:   model.SessionID(sessionID),
-		CharacterID: characterID,
-	})
+	}, request)
 
 	if err != nil {
 		http.Error(w, fmt.Sprintf("error joining session: %v", err), http.StatusBadRequest)
@@ -126,32 +109,26 @@ func (handler *sessionHandler) joinSession(w http.ResponseWriter, r *http.Reques
 }
 
 func (handler *sessionHandler) leaveSession(w http.ResponseWriter, r *http.Request) {
-	if !methodAllowed(http.MethodPost, r.Method) {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	if methodAllowed(http.MethodPost, w, r) != nil {
 		return
 	}
 
-	var characterID int
-	if err := json.NewDecoder(r.Body).Decode(&characterID); err != nil {
-		http.Error(w, fmt.Sprintf("error parsing request body: %v", err), http.StatusBadRequest)
+	var request leavesession.Request
+	if err := decodeRequest(&request, w, r); err != nil {
 		return
 	}
 
-	leaveSessionPorts := leavesession.Ports{
+	sID, ok := pathValues(r, "sessionid")["sessionid"]
+	if !ok {
+		http.Error(w, "error while reading session id from path", http.StatusBadRequest)
+		return
+	}
+	request.SessionID = model.SessionID(sID)
+
+	err := leavesession.Leave(handler.ctx, leavesession.Ports{
 		SessionRepository:   handler.sessionRepository,
 		CharacterRepository: handler.characterRepository,
-	}
-
-	sessionID := r.PathValue("sessionid")
-	if len(sessionID) == 0 {
-		http.Error(w, "error while reading session id from path", http.StatusInternalServerError)
-		return
-	}
-
-	err := leavesession.Leave(handler.ctx, leaveSessionPorts, leavesession.Request{
-		SessionID:   model.SessionID(sessionID),
-		CharacterID: characterID,
-	})
+	}, request)
 
 	if err != nil {
 		http.Error(w, fmt.Sprintf("error leaving session: %v", err), http.StatusBadRequest)

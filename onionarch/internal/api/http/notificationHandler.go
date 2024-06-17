@@ -2,7 +2,6 @@ package http
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -34,13 +33,12 @@ func (handler *notificationHandler) SendNotification(w http.ResponseWriter, r *h
 }
 
 // // route: /api/v1/fatecore/session/{sessionid}/notification GET
-func (handler *notificationHandler) ReceiveNotification(w http.ResponseWriter, r *http.Request) {
-	handler.receiveNotification(w, r)
+func (handler *notificationHandler) CollectNotification(w http.ResponseWriter, r *http.Request) {
+	handler.collectNotification(w, r)
 }
 
 func (handler *notificationHandler) sendNotification(w http.ResponseWriter, r *http.Request) {
-	if !methodAllowed(http.MethodPost, r.Method) {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	if methodAllowed(http.MethodPost, w, r) != nil {
 		return
 	}
 
@@ -63,39 +61,32 @@ func (handler *notificationHandler) sendNotification(w http.ResponseWriter, r *h
 	w.WriteHeader(http.StatusOK)
 }
 
-func (handler *notificationHandler) receiveNotification(w http.ResponseWriter, r *http.Request) {
-	if !methodAllowed(http.MethodGet, r.Method) {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+func (handler *notificationHandler) collectNotification(w http.ResponseWriter, r *http.Request) {
+	if methodAllowed(http.MethodGet, w, r) != nil {
 		return
 	}
 
-	sessionID := r.PathValue("sessionid")
-	if len(sessionID) == 0 {
-		http.Error(w, "error while reading session id from path", http.StatusInternalServerError)
+	sID, ok := pathValues(r, "sessionid")["sessionid"]
+	if !ok {
+		http.Error(w, "error while reading session id from path", http.StatusBadRequest)
 		return
 	}
 
-	var request struct {
-		Offset int
-	}
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		http.Error(w, fmt.Sprintf("error parsing request body: %v", err), http.StatusBadRequest)
+	var request struct{ Offset int }
+	if err := decodeRequest(&request, w, r); err != nil {
 		return
 	}
 
 	notificationReader := infraNotification.JSONSinkReader{
-		Offset:    request.Offset,
-		SessionID: model.SessionID(sessionID),
-		Sink:      &handler.sink,
+		Notifications: handler.sink[model.SessionID(sID)][request.Offset:],
 	}
 
-	responsebody := []byte{}
-	err := handler.service.Read(handler.ctx, responsebody, notificationReader)
+	out, err := handler.service.Read(handler.ctx, &notificationReader)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("error leaving session: %v", err), http.StatusBadRequest)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(responsebody)
+	w.Write(out)
 }

@@ -27,8 +27,7 @@ func Test_SendNotification(t *testing.T) {
 	})
 
 	if err != nil {
-		fmt.Println("Error marshalling data to JSON:", err)
-		return
+		t.Fatalf("%s: Error marshalling data to JSON:", err)
 	}
 
 	req := httptest.NewRequest("POST", "/api/v1/fatecore/session/1337/notification", bytes.NewReader(jsonData))
@@ -54,12 +53,11 @@ func Test_ReceiveNotification(t *testing.T) {
 	jsonData, err := json.Marshal(model.Notification{
 		SessionId: "1337",
 		FromId:    1,
-		Body:      "Hello Moto!",
+		Body:      "Hello Moto!!!",
 	})
 
 	if err != nil {
-		fmt.Println("Error marshalling data to JSON:", err)
-		return
+		t.Fatalf("%s: Error marshalling data to JSON:", err)
 	}
 
 	req := httptest.NewRequest("POST", "/api/v1/fatecore/session/1337/notification", bytes.NewReader(jsonData))
@@ -83,7 +81,7 @@ func Test_ReceiveNotification(t *testing.T) {
 	req.SetPathValue("sessionid", "1337")
 	rec = httptest.NewRecorder()
 
-	notificationHandler.ReceiveNotification(rec, req)
+	notificationHandler.CollectNotification(rec, req)
 	res = rec.Result()
 	defer res.Body.Close()
 
@@ -96,5 +94,7 @@ func Test_ReceiveNotification(t *testing.T) {
 		t.Errorf("expected error to be nil got %v", err)
 	}
 
-	fmt.Print(data)
+	if len(data) == 0 {
+		t.Fatal("no data in body")
+	}
 }

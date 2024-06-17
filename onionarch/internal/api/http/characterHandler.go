@@ -2,23 +2,23 @@ package http
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 
 	"github.com/Penomatikus/onionarch/internal/domain/repository"
-	createplayer "github.com/Penomatikus/onionarch/internal/domain/usecases/createPlayer"
+	createcharacter "github.com/Penomatikus/onionarch/internal/domain/usecases/createCharacter"
 )
 
 type characterHandler struct {
-	ctx              context.Context
-	playerRepository repository.PlayerRepository
+	ctx                 context.Context
+	characterRepository repository.CharacterRepository
+	playerRepository    repository.PlayerRepository
 }
 
-func ProvideCharacterHandler(ctx context.Context, playerRepository repository.PlayerRepository) *characterHandler {
+func ProvideCharacterHandler(ctx context.Context, characterRepository repository.CharacterRepository) *characterHandler {
 	return &characterHandler{
-		ctx:              ctx,
-		playerRepository: playerRepository,
+		ctx:                 ctx,
+		characterRepository: characterRepository,
 	}
 }
 
@@ -28,19 +28,21 @@ func (handler *characterHandler) CreateCharacter(w http.ResponseWriter, r *http.
 }
 
 func (handler *characterHandler) createCharacter(w http.ResponseWriter, r *http.Request) {
-	if !methodAllowed(http.MethodPost, r.Method) {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	if err := methodAllowed(http.MethodPost, w, r); err != nil {
 		return
 	}
 
-	var playerName string
-	if err := json.NewDecoder(r.Body).Decode(&playerName); err != nil {
-		http.Error(w, fmt.Sprintf("error parsing request body: %v", err), http.StatusBadRequest)
+	var request createcharacter.Request
+	if err := decodeRequest(&request, w, r); err != nil {
 		return
 	}
 
-	err := createplayer.Create(handler.ctx, createplayer.Ports{PlayerRepository: handler.playerRepository}, playerName)
-	if err != nil {
+	ports := createcharacter.Ports{
+		PlayerRepository:    handler.playerRepository,
+		CharacterRepository: handler.characterRepository,
+	}
+
+	if err := createcharacter.Create(handler.ctx, ports, request); err != nil {
 		http.Error(w, fmt.Sprintf("error joining session: %v", err), http.StatusBadRequest)
 		return
 	}

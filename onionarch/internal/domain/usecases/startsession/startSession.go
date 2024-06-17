@@ -11,8 +11,8 @@ import (
 
 type (
 	Request struct {
-		Title   string
-		OwnerID int
+		Title string
+		Owner int
 	}
 
 	Ports struct {
@@ -31,6 +31,6 @@ func Start(ctx context.Context, ports Ports, req Request) (*model.SessionID, err
 		ID:        sessionID,
 		CreatedAt: time.Now(),
 		Title:     req.Title,
-		Owner:     req.OwnerID,
+		Owner:     req.Owner,
 	})
 }

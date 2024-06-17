@@ -92,7 +92,8 @@ func ProvidePlayerRepository(dbStore *dbStore) repository.PlayerRepository {
 }
 
 func (repo *playerRepository) Create(ctx context.Context, player *model.Player) error {
-	if _, ok := repo.store.player[repo.store.autoIncrement(_PLAYER)]; ok {
+	player.ID = repo.store.autoIncrement(_PLAYER)
+	if _, ok := repo.store.player[player.ID]; ok {
 		return repository.ErrAlreadyExists
 	}
 
@@ -127,10 +128,10 @@ func ProvideCharacterRepository(dbStore *dbStore) repository.CharacterRepository
 }
 
 func (repo *characterRepository) Create(ctx context.Context, character *model.Character) error {
-	if _, ok := repo.store.character[repo.store.autoIncrement(_CHARACTER)]; ok {
+	character.ID = repo.store.autoIncrement(_CHARACTER)
+	if _, ok := repo.store.character[character.ID]; ok {
 		return repository.ErrAlreadyExists
 	}
-
 	repo.store.character[character.ID] = character
 	return nil
 }

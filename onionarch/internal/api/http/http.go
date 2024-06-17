@@ -1,33 +1,38 @@
 package http
 
-// type SessionHandler struct {
-// 	sessionService service.Session
-// }
+import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"net/http"
+)
 
-// func NewSessionHandler(sessionService service.Session) SessionHandler {
-// 	return SessionHandler{
-// 		sessionService: sessionService,
-// 	}
-// }
+var (
+	ErrMethodNotAllowed = errors.New("method not allowed")
+	ErrDecodingFailed   = errors.New("docoding failed")
+)
 
-// func (h *SessionHandler) StartSession(w http.ResponseWriter, r *http.Request) {
-// 	sessionID, err := h.sessionService.New(context.Background())
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
-// 	w.Header().Set("Content-Type", "text/plain")
-// 	fmt.Fprint(w, sessionID)
-// }
+func methodAllowed(want string, w http.ResponseWriter, r *http.Request) (err error) {
+	if want != r.Method {
+		err = ErrMethodNotAllowed
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
+	return
+}
 
-// func routes() *http.ServeMux {
-// 	mux := http.NewServeMux()
-// 	mux.HandleFunc("POST /api/start", nil)
-// 	mux.HandleFunc("POST /api/join/{sessionID}", nil)
-// 	return mux
-// }
+func pathValues(r *http.Request, values ...string) (vMap map[string]string) {
+	vMap = make(map[string]string, len(values))
+	for _, value := range values {
+		vMap[value] = r.PathValue(value)
+	}
+	return
+}
 
-// cheap convinient method
-func methodAllowed(want, got string) bool {
-	return want == got
+func decodeRequest[T any](request *T, w http.ResponseWriter, r *http.Request) (err error) {
+	if err = json.NewDecoder(r.Body).Decode(request); err != nil {
+		err = fmt.Errorf("%w: %s", ErrDecodingFailed, err)
+		http.Error(w, fmt.Sprintf("error parsing request body: %v", err), http.StatusBadRequest)
+		return
+	}
+	return
 }

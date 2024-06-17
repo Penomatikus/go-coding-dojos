@@ -17,8 +17,8 @@ func Test_StartSession_Success(t *testing.T) {
 	}
 
 	request := Request{
-		Title:   "Test Session",
-		OwnerID: 1337,
+		Title: "Test Session",
+		Owner: 1337,
 	}
 
 	sessionID, err := Start(context.Background(), ports, request)
