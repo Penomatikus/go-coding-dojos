@@ -9,9 +9,9 @@ import (
 	"github.com/Penomatikus/onionarch/internal/domain/notification"
 	"github.com/Penomatikus/onionarch/internal/domain/repository"
 	"github.com/Penomatikus/onionarch/internal/domain/sessionid"
-	"github.com/Penomatikus/onionarch/internal/domain/usecases/joinsession"
-	"github.com/Penomatikus/onionarch/internal/domain/usecases/leavesession"
-	"github.com/Penomatikus/onionarch/internal/domain/usecases/startsession"
+	"github.com/Penomatikus/onionarch/internal/domain/usecases/session/joinsession"
+	"github.com/Penomatikus/onionarch/internal/domain/usecases/session/leavesession"
+	"github.com/Penomatikus/onionarch/internal/domain/usecases/session/startsession"
 )
 
 type sessionHandler struct {

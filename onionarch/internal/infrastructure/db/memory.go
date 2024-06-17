@@ -102,16 +102,13 @@ func (repo *playerRepository) Create(ctx context.Context, player *model.Player) 
 }
 
 func (repo *playerRepository) Update(ctx context.Context, player *model.Player) error {
-	dbPlayer, ok := repo.store.player[player.ID]
+	p, ok := repo.store.player[player.ID]
 	if !ok {
 		return repository.ErrNotFound
 	}
 
-	repo.store.player[player.ID] = &model.Player{
-		ID:        dbPlayer.ID,
-		CreatedAt: dbPlayer.CreatedAt,
-		Name:      player.Name,
-	}
+	p.Name = player.Name
+	repo.store.player[player.ID] = p
 	return nil
 }
 
@@ -145,9 +142,13 @@ func (repo *characterRepository) FindByID(ctx context.Context, characterID int) 
 }
 
 func (repo *characterRepository) Update(ctx context.Context, character *model.Character) error {
-	_, ok := repo.store.character[character.ID]
+	c, ok := repo.store.character[character.ID]
 	if !ok {
 		return repository.ErrNotFound
 	}
+
+	c.Points = character.Points
+	c.SessionID = character.SessionID
+	repo.store.character[character.ID] = c
 	return nil
 }

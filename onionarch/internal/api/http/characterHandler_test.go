@@ -9,15 +9,15 @@ import (
 	"time"
 
 	"github.com/Penomatikus/onionarch/internal/domain/model"
-	createcharacter "github.com/Penomatikus/onionarch/internal/domain/usecases/createCharacter"
-	"github.com/Penomatikus/onionarch/internal/infrastructure/db"
+	"github.com/Penomatikus/onionarch/internal/domain/repository/repositorytest"
+	createcharacter "github.com/Penomatikus/onionarch/internal/domain/usecases/character/createCharacter"
 )
 
 func Test_CreateCharacter(t *testing.T) {
 	ctx := context.Background()
-	dbStore := db.NewDBStore()
+	dbStore := repositorytest.NewDBStore()
 
-	playerRepo := db.ProvidePlayerRepository(&dbStore)
+	playerRepo := repositorytest.ProvidePlayerRepository(&dbStore)
 	err := playerRepo.Create(ctx, &model.Player{
 		CreatedAt: time.Now(),
 		Name:      "Test",
@@ -26,11 +26,10 @@ func Test_CreateCharacter(t *testing.T) {
 		t.Fatalf("%s: Error creating player", err)
 	}
 
-	handler := characterHandler{
-		ctx:                 ctx,
-		characterRepository: db.ProvideCharacterRepository(&dbStore),
-		playerRepository:    playerRepo,
-	}
+	handler := ProvideCharacterHandler(ctx,
+		repositorytest.ProvideCharacterRepository(&dbStore),
+		playerRepo,
+	)
 
 	jsonData, err := json.Marshal(createcharacter.Request{
 		PlayerID:    1,
