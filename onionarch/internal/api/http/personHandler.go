@@ -2,23 +2,24 @@ package http
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 
 	"github.com/Penomatikus/onionarch/internal/domain/repository"
-	createplayer "github.com/Penomatikus/onionarch/internal/domain/usecases/createPlayer"
+	createplayer "github.com/Penomatikus/onionarch/internal/domain/usecases/player/createPlayer"
 )
 
 type playerHandler struct {
-	ctx              context.Context
-	playerRepository repository.PlayerRepository
+	ctx               context.Context
+	createplayerPorts createplayer.Ports
 }
 
 func ProvidePlayerHandler(ctx context.Context, playerRepository repository.PlayerRepository) *playerHandler {
 	return &playerHandler{
-		ctx:              ctx,
-		playerRepository: playerRepository,
+		ctx: ctx,
+		createplayerPorts: createplayer.Ports{
+			PlayerRepository: playerRepository,
+		},
 	}
 }
 
@@ -28,15 +29,14 @@ func (handler *playerHandler) CreatePlayer(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	var playerName string
-	if err := json.NewDecoder(r.Body).Decode(&playerName); err != nil {
-		http.Error(w, fmt.Sprintf("error parsing request body: %v", err), http.StatusBadRequest)
+	var request createplayer.Request
+	if err := decodeRequest(&request, w, r); err != nil {
 		return
 	}
 
-	err := createplayer.Create(handler.ctx, createplayer.Ports{PlayerRepository: handler.playerRepository}, playerName)
+	err := createplayer.Create(handler.ctx, handler.createplayerPorts, request)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("error joining session: %v", err), http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("error creating player: %v", err), http.StatusBadRequest)
 		return
 	}
 

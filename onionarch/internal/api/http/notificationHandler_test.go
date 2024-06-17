@@ -78,7 +78,6 @@ func Test_ReceiveNotification(t *testing.T) {
 	}
 
 	req = httptest.NewRequest("GET", "/api/v1/fatecore/session/1337/notification", bytes.NewReader(jsonData))
-	req.SetPathValue("sessionid", "1337")
 	rec = httptest.NewRecorder()
 
 	notificationHandler.CollectNotification(rec, req)

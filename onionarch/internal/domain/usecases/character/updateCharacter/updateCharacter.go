@@ -22,7 +22,7 @@ type (
 )
 
 func Update(ctx context.Context, ports Ports, req Request) error {
-	if req.Points == nil && req.SessionID == nil {
+	if req.Points == nil {
 		return nil
 	}
 
@@ -37,16 +37,9 @@ func Update(ctx context.Context, ports Ports, req Request) error {
 	}
 
 	update := &model.Character{
-		ID: req.ID,
+		ID:        req.ID,
+		Points:    *req.Points,
+		SessionID: req.SessionID,
 	}
-
-	if req.Points != nil {
-		update.Points = *req.Points
-	}
-
-	if req.SessionID != nil {
-		update.SessionID = req.SessionID
-	}
-
 	return ports.CharacterRepository.Update(ctx, update)
 }

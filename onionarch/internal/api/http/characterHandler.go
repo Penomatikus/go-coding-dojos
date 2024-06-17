@@ -53,7 +53,7 @@ func (handler *characterHandler) createCharacter(w http.ResponseWriter, r *http.
 	}
 
 	if err := createcharacter.Create(handler.ctx, handler.createPorts, request); err != nil {
-		http.Error(w, fmt.Sprintf("error joining session: %v", err), http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("error while creating chraracter: %v", err), http.StatusBadRequest)
 		return
 	}
 
@@ -71,7 +71,7 @@ func (handler *characterHandler) updateCharacter(w http.ResponseWriter, r *http.
 	}
 
 	if err := updatecharacter.Update(handler.ctx, handler.updatePorts, request); err != nil {
-		http.Error(w, fmt.Sprintf("error joining session: %v", err), http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("error while updating chraracter: %v", err), http.StatusBadRequest)
 		return
 	}
 

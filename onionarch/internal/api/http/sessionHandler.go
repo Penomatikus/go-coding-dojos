@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/Penomatikus/onionarch/internal/domain/model"
-	"github.com/Penomatikus/onionarch/internal/domain/notification"
 	"github.com/Penomatikus/onionarch/internal/domain/repository"
 	"github.com/Penomatikus/onionarch/internal/domain/sessionid"
 	"github.com/Penomatikus/onionarch/internal/domain/usecases/session/joinsession"
@@ -15,25 +14,33 @@ import (
 )
 
 type sessionHandler struct {
-	ctx                 context.Context
-	characterRepository repository.CharacterRepository
-	notificationService notification.Service
-	sessionIDGen        sessionid.Generator
-	sessionRepository   repository.SessionRepository
+	ctx               context.Context
+	startsessionPorts startsession.Ports
+	joinsessionPorts  joinsession.Ports
+	leavesessionPorts leavesession.Ports
 }
 
 func ProvidesessionHandler(ctx context.Context,
 	characterRepository repository.CharacterRepository,
-	notificationService notification.Service,
+	playerRepository repository.PlayerRepository,
 	sessionIDGen sessionid.Generator,
 	sessionRepository repository.SessionRepository,
 ) *sessionHandler {
 	return &sessionHandler{
-		ctx:                 ctx,
-		characterRepository: characterRepository,
-		notificationService: notificationService,
-		sessionIDGen:        sessionIDGen,
-		sessionRepository:   sessionRepository,
+		ctx: ctx,
+		startsessionPorts: startsession.Ports{
+			PlayerRepository:   playerRepository,
+			SessionRepository:  sessionRepository,
+			SessionIDGenerator: sessionIDGen,
+		},
+		joinsessionPorts: joinsession.Ports{
+			SessionRepository:   sessionRepository,
+			CharacterRepository: characterRepository,
+		},
+		leavesessionPorts: leavesession.Ports{
+			SessionRepository:   sessionRepository,
+			CharacterRepository: characterRepository,
+		},
 	}
 }
 
@@ -62,12 +69,7 @@ func (handler *sessionHandler) startSession(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	startsessionPorts := startsession.Ports{
-		SessionRepository:  handler.sessionRepository,
-		SessionIDGenerator: handler.sessionIDGen,
-	}
-
-	id, err := startsession.Start(handler.ctx, startsessionPorts, request)
+	id, err := startsession.Start(handler.ctx, handler.startsessionPorts, request)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("error creating new session: %v", err), http.StatusBadRequest)
 		return
@@ -75,7 +77,7 @@ func (handler *sessionHandler) startSession(w http.ResponseWriter, r *http.Reque
 
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("application", "plain/text")
-	fmt.Fprint(w, id)
+	fmt.Fprint(w, *id)
 }
 
 func (handler *sessionHandler) joinSession(w http.ResponseWriter, r *http.Request) {
@@ -95,11 +97,7 @@ func (handler *sessionHandler) joinSession(w http.ResponseWriter, r *http.Reques
 	}
 	request.SessionID = model.SessionID(sID)
 
-	err := joinsession.Join(handler.ctx, joinsession.Ports{
-		SessionRepository:   handler.sessionRepository,
-		CharacterRepository: handler.characterRepository,
-	}, request)
-
+	err := joinsession.Join(handler.ctx, handler.joinsessionPorts, request)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("error joining session: %v", err), http.StatusBadRequest)
 		return
@@ -125,11 +123,7 @@ func (handler *sessionHandler) leaveSession(w http.ResponseWriter, r *http.Reque
 	}
 	request.SessionID = model.SessionID(sID)
 
-	err := leavesession.Leave(handler.ctx, leavesession.Ports{
-		SessionRepository:   handler.sessionRepository,
-		CharacterRepository: handler.characterRepository,
-	}, request)
-
+	err := leavesession.Leave(handler.ctx, handler.leavesessionPorts, request)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("error leaving session: %v", err), http.StatusBadRequest)
 		return

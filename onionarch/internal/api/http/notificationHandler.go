@@ -48,13 +48,20 @@ func (handler *notificationHandler) sendNotification(w http.ResponseWriter, r *h
 		return
 	}
 
+	// sID, ok := pathValues(r, "sessionid")["sessionid"]
+	// if !ok {
+	// 	http.Error(w, "error while reading session id from path", http.StatusBadRequest)
+	// 	return
+	// }
+	// request.SessionID = model.SessionID(sID)
+
 	notificationWriter := infraNotification.JSONSinkWriter{
 		Sink: &handler.sink,
 	}
 
 	err = handler.service.Send(handler.ctx, body, notificationWriter)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("error seinding notification to session: %v", err), http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("error sending notification to session: %v", err), http.StatusBadRequest)
 		return
 	}
 
@@ -83,7 +90,7 @@ func (handler *notificationHandler) collectNotification(w http.ResponseWriter, r
 
 	out, err := handler.service.Read(handler.ctx, &notificationReader)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("error leaving session: %v", err), http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("error while reading session notifications: %v", err), http.StatusBadRequest)
 		return
 	}
 
