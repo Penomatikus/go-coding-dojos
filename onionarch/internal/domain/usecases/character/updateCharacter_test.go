@@ -1,4 +1,4 @@
-package updatecharacter
+package character
 
 import (
 	"context"
@@ -30,13 +30,13 @@ func Test_UpdateCharacter_Success(t *testing.T) {
 		t.Fatalf("%s: Error creating player", err)
 	}
 
-	ports := Ports{
+	ports := UpdatePorts{
 		PlayerRepository:    playerRepo,
 		CharacterRepository: characterRepo,
 	}
 	points := 99
 	sId := model.SessionID("1")
-	err := Update(context.Background(), ports, Request{
+	err := Update(context.Background(), ports, UpdateRequest{
 		ID:        1,
 		PlayerID:  1,
 		Points:    &points,

@@ -1,4 +1,4 @@
-package createplayer
+package player
 
 import (
 	"context"
@@ -9,16 +9,16 @@ import (
 )
 
 type (
-	Ports struct {
+	CreatePorts struct {
 		PlayerRepository repository.PlayerRepository
 	}
 
-	Request struct {
+	CreateRequest struct {
 		Name string
 	}
 )
 
-func Create(ctx context.Context, ports Ports, req Request) error {
+func Create(ctx context.Context, ports CreatePorts, req CreateRequest) error {
 	return ports.PlayerRepository.Create(ctx, &model.Player{
 		Name:      req.Name,
 		CreatedAt: time.Now(),

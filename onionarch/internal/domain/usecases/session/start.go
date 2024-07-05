@@ -1,4 +1,4 @@
-package startsession
+package session
 
 import (
 	"context"
@@ -10,19 +10,19 @@ import (
 )
 
 type (
-	Request struct {
+	StartRequest struct {
 		Title string
 		Owner int
 	}
 
-	Ports struct {
+	StartPorts struct {
 		PlayerRepository   repository.PlayerRepository
 		SessionRepository  repository.SessionRepository
 		SessionIDGenerator sessionid.Generator
 	}
 )
 
-func Start(ctx context.Context, ports Ports, req Request) (*model.SessionID, error) {
+func Start(ctx context.Context, ports StartPorts, req StartRequest) (*model.SessionID, error) {
 	_, err := ports.PlayerRepository.FindByID(ctx, req.Owner)
 	if err != nil {
 		return nil, err

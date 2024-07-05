@@ -1,4 +1,4 @@
-package leavesession
+package session
 
 import (
 	"context"
@@ -8,18 +8,18 @@ import (
 )
 
 type (
-	Ports struct {
+	LeavePorts struct {
 		SessionRepository   repository.SessionRepository
 		CharacterRepository repository.CharacterRepository
 	}
 
-	Request struct {
+	LeaveRequest struct {
 		SessionID   model.SessionID
 		CharacterID int
 	}
 )
 
-func Leave(ctx context.Context, ports Ports, req Request) error {
+func Leave(ctx context.Context, ports LeavePorts, req LeaveRequest) error {
 	_, err := ports.SessionRepository.FindByID(ctx, req.SessionID)
 	if err != nil {
 		return err

@@ -8,16 +8,14 @@ import (
 	"github.com/Penomatikus/onionarch/internal/domain/model"
 	"github.com/Penomatikus/onionarch/internal/domain/repository"
 	"github.com/Penomatikus/onionarch/internal/domain/sessionid"
-	"github.com/Penomatikus/onionarch/internal/domain/usecases/session/joinsession"
-	"github.com/Penomatikus/onionarch/internal/domain/usecases/session/leavesession"
-	"github.com/Penomatikus/onionarch/internal/domain/usecases/session/startsession"
+	"github.com/Penomatikus/onionarch/internal/domain/usecases/session"
 )
 
 type sessionHandler struct {
 	ctx               context.Context
-	startsessionPorts startsession.Ports
-	joinsessionPorts  joinsession.Ports
-	leavesessionPorts leavesession.Ports
+	startsessionPorts session.StartPorts
+	joinsessionPorts  session.JoinPorts
+	leavesessionPorts session.LeavePorts
 }
 
 func ProvidesessionHandler(ctx context.Context,
@@ -28,16 +26,16 @@ func ProvidesessionHandler(ctx context.Context,
 ) *sessionHandler {
 	return &sessionHandler{
 		ctx: ctx,
-		startsessionPorts: startsession.Ports{
+		startsessionPorts: session.StartPorts{
 			PlayerRepository:   playerRepository,
 			SessionRepository:  sessionRepository,
 			SessionIDGenerator: sessionIDGen,
 		},
-		joinsessionPorts: joinsession.Ports{
+		joinsessionPorts: session.JoinPorts{
 			SessionRepository:   sessionRepository,
 			CharacterRepository: characterRepository,
 		},
-		leavesessionPorts: leavesession.Ports{
+		leavesessionPorts: session.LeavePorts{
 			SessionRepository:   sessionRepository,
 			CharacterRepository: characterRepository,
 		},
@@ -64,12 +62,12 @@ func (handler *sessionHandler) startSession(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	var request startsession.Request
+	var request session.StartRequest
 	if err := decodeRequest(&request, w, r); err != nil {
 		return
 	}
 
-	id, err := startsession.Start(handler.ctx, handler.startsessionPorts, request)
+	id, err := session.Start(handler.ctx, handler.startsessionPorts, request)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("error creating new session: %v", err), http.StatusBadRequest)
 		return
@@ -85,7 +83,7 @@ func (handler *sessionHandler) joinSession(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	var request joinsession.Request
+	var request session.JoinRequest
 	if err := decodeRequest(&request, w, r); err != nil {
 		return
 	}
@@ -97,7 +95,7 @@ func (handler *sessionHandler) joinSession(w http.ResponseWriter, r *http.Reques
 	}
 	request.SessionID = model.SessionID(sID)
 
-	err := joinsession.Join(handler.ctx, handler.joinsessionPorts, request)
+	err := session.Join(handler.ctx, handler.joinsessionPorts, request)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("error joining session: %v", err), http.StatusBadRequest)
 		return
@@ -111,7 +109,7 @@ func (handler *sessionHandler) leaveSession(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	var request leavesession.Request
+	var request session.LeaveRequest
 	if err := decodeRequest(&request, w, r); err != nil {
 		return
 	}
@@ -123,7 +121,7 @@ func (handler *sessionHandler) leaveSession(w http.ResponseWriter, r *http.Reque
 	}
 	request.SessionID = model.SessionID(sID)
 
-	err := leavesession.Leave(handler.ctx, handler.leavesessionPorts, request)
+	err := session.Leave(handler.ctx, handler.leavesessionPorts, request)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("error leaving session: %v", err), http.StatusBadRequest)
 		return

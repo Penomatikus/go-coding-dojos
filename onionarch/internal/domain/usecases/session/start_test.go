@@ -1,4 +1,4 @@
-package startsession
+package session
 
 import (
 	"context"
@@ -11,12 +11,12 @@ import (
 func Test_StartSession_Success(t *testing.T) {
 	db := repositorytest_test.NewDBStore()
 
-	ports := Ports{
+	ports := StartPorts{
 		SessionRepository:  repositorytest_test.ProvideSessionRepository(&db),
 		SessionIDGenerator: sessionidtest.ProvideSessionIDGen(),
 	}
 
-	request := Request{
+	request := StartRequest{
 		Title: "Test Session",
 		Owner: 1337,
 	}

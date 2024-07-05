@@ -1,4 +1,4 @@
-package createcharacter
+package character
 
 import (
 	"context"
@@ -17,12 +17,12 @@ func Test_CreateCharacter_Success(t *testing.T) {
 		Name:      "Ingeborg",
 	}
 
-	ports := Ports{
+	ports := CreatePorts{
 		PlayerRepository:    repositorytest.ProvidePlayerRepository(&db),
 		CharacterRepository: repositorytest.ProvideCharacterRepository(&db),
 	}
 
-	err := Create(context.Background(), ports, Request{
+	err := Create(context.Background(), ports, CreateRequest{
 		PlayerID:    1,
 		Name:        "Wilde Inge",
 		Description: "Wild wie zwei Juttas",

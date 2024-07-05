@@ -48,13 +48,6 @@ func (handler *notificationHandler) sendNotification(w http.ResponseWriter, r *h
 		return
 	}
 
-	// sID, ok := pathValues(r, "sessionid")["sessionid"]
-	// if !ok {
-	// 	http.Error(w, "error while reading session id from path", http.StatusBadRequest)
-	// 	return
-	// }
-	// request.SessionID = model.SessionID(sID)
-
 	notificationWriter := infraNotification.JSONSinkWriter{
 		Sink: &handler.sink,
 	}

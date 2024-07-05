@@ -10,7 +10,7 @@ import (
 
 	"github.com/Penomatikus/onionarch/internal/domain/model"
 	"github.com/Penomatikus/onionarch/internal/domain/repository/repositorytest"
-	createcharacter "github.com/Penomatikus/onionarch/internal/domain/usecases/character/createCharacter"
+	"github.com/Penomatikus/onionarch/internal/domain/usecases/character"
 )
 
 func Test_CreateCharacter(t *testing.T) {
@@ -31,7 +31,7 @@ func Test_CreateCharacter(t *testing.T) {
 		playerRepo,
 	)
 
-	jsonData, err := json.Marshal(createcharacter.Request{
+	jsonData, err := json.Marshal(character.CreateRequest{
 		PlayerID:    1,
 		Name:        "Hallo",
 		Description: "Test",

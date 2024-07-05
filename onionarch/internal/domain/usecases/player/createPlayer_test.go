@@ -1,4 +1,4 @@
-package createplayer
+package player
 
 import (
 	"context"
@@ -12,11 +12,11 @@ func Test_CreatePlayer_Success(t *testing.T) {
 	ctx := context.Background()
 	dbStore := repositorytest.NewDBStore()
 
-	ports := Ports{
+	ports := CreatePorts{
 		PlayerRepository: repositorytest.ProvidePlayerRepository(&dbStore),
 	}
 
-	if err := Create(ctx, ports, Request{Name: "Maggus"}); err != nil {
+	if err := Create(ctx, ports, CreateRequest{Name: "Maggus"}); err != nil {
 		t.Fatal(err)
 	}
 

@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/Penomatikus/onionarch/internal/domain/repository/repositorytest"
-	createplayer "github.com/Penomatikus/onionarch/internal/domain/usecases/player/createPlayer"
+	"github.com/Penomatikus/onionarch/internal/domain/usecases/player"
 )
 
 func Test_CreatePerson_Success(t *testing.T) {
@@ -16,7 +16,7 @@ func Test_CreatePerson_Success(t *testing.T) {
 	dbStore := repositorytest.NewDBStore()
 
 	handler := ProvidePlayerHandler(ctx, repositorytest.ProvidePlayerRepository(&dbStore))
-	jsonData, err := json.Marshal(createplayer.Request{Name: "Maggus"})
+	jsonData, err := json.Marshal(player.CreateRequest{Name: "Maggus"})
 	if err != nil {
 		t.Fatalf("%s: Error marshalling data to JSON", err)
 	}

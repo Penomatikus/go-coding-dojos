@@ -6,14 +6,13 @@ import (
 	"net/http"
 
 	"github.com/Penomatikus/onionarch/internal/domain/repository"
-	createcharacter "github.com/Penomatikus/onionarch/internal/domain/usecases/character/createCharacter"
-	updatecharacter "github.com/Penomatikus/onionarch/internal/domain/usecases/character/updateCharacter"
+	"github.com/Penomatikus/onionarch/internal/domain/usecases/character"
 )
 
 type characterHandler struct {
 	ctx         context.Context
-	createPorts createcharacter.Ports
-	updatePorts updatecharacter.Ports
+	createPorts character.CreatePorts
+	updatePorts character.UpdatePorts
 }
 
 func ProvideCharacterHandler(ctx context.Context,
@@ -21,11 +20,11 @@ func ProvideCharacterHandler(ctx context.Context,
 	playerRepository repository.PlayerRepository) *characterHandler {
 	return &characterHandler{
 		ctx: ctx,
-		createPorts: createcharacter.Ports{
+		createPorts: character.CreatePorts{
 			PlayerRepository:    playerRepository,
 			CharacterRepository: characterRepository,
 		},
-		updatePorts: updatecharacter.Ports{
+		updatePorts: character.UpdatePorts{
 			PlayerRepository:    playerRepository,
 			CharacterRepository: characterRepository,
 		},
@@ -47,12 +46,12 @@ func (handler *characterHandler) createCharacter(w http.ResponseWriter, r *http.
 		return
 	}
 
-	var request createcharacter.Request
+	var request character.CreateRequest
 	if err := decodeRequest(&request, w, r); err != nil {
 		return
 	}
 
-	if err := createcharacter.Create(handler.ctx, handler.createPorts, request); err != nil {
+	if err := character.Create(handler.ctx, handler.createPorts, request); err != nil {
 		http.Error(w, fmt.Sprintf("error while creating chraracter: %v", err), http.StatusBadRequest)
 		return
 	}
@@ -65,12 +64,12 @@ func (handler *characterHandler) updateCharacter(w http.ResponseWriter, r *http.
 		return
 	}
 
-	var request updatecharacter.Request
+	var request character.UpdateRequest
 	if err := decodeRequest(&request, w, r); err != nil {
 		return
 	}
 
-	if err := updatecharacter.Update(handler.ctx, handler.updatePorts, request); err != nil {
+	if err := character.Update(handler.ctx, handler.updatePorts, request); err != nil {
 		http.Error(w, fmt.Sprintf("error while updating chraracter: %v", err), http.StatusBadRequest)
 		return
 	}

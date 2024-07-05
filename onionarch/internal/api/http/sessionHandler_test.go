@@ -12,9 +12,7 @@ import (
 	"github.com/Penomatikus/onionarch/internal/domain/model"
 	"github.com/Penomatikus/onionarch/internal/domain/repository/repositorytest"
 	"github.com/Penomatikus/onionarch/internal/domain/sessionid/sessionidtest"
-	"github.com/Penomatikus/onionarch/internal/domain/usecases/session/joinsession"
-	"github.com/Penomatikus/onionarch/internal/domain/usecases/session/leavesession"
-	"github.com/Penomatikus/onionarch/internal/domain/usecases/session/startsession"
+	"github.com/Penomatikus/onionarch/internal/domain/usecases/session"
 )
 
 func Test_Session_Success(t *testing.T) {
@@ -44,7 +42,7 @@ func Test_Session_Success(t *testing.T) {
 
 	var sessionID *string
 	t.Run("Start session", func(t *testing.T) {
-		jsonData, err := json.Marshal(startsession.Request{
+		jsonData, err := json.Marshal(session.StartRequest{
 			Title: "Test",
 			Owner: 1,
 		})
@@ -75,7 +73,7 @@ func Test_Session_Success(t *testing.T) {
 	})
 
 	t.Run("Join session", func(t *testing.T) {
-		jsonData, err := json.Marshal(joinsession.Request{
+		jsonData, err := json.Marshal(session.JoinRequest{
 			SessionID:   model.SessionID(*sessionID),
 			CharacterID: 1,
 		})
@@ -108,7 +106,7 @@ func Test_Session_Success(t *testing.T) {
 	})
 
 	t.Run("Leave session", func(t *testing.T) {
-		jsonData, err := json.Marshal(leavesession.Request{
+		jsonData, err := json.Marshal(session.LeaveRequest{
 			SessionID:   model.SessionID(*sessionID),
 			CharacterID: 1,
 		})

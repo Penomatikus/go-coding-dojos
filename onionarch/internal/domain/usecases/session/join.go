@@ -1,4 +1,4 @@
-package joinsession
+package session
 
 import (
 	"context"
@@ -9,12 +9,12 @@ import (
 )
 
 type (
-	Ports struct {
+	JoinPorts struct {
 		SessionRepository   repository.SessionRepository
 		CharacterRepository repository.CharacterRepository
 	}
 
-	Request struct {
+	JoinRequest struct {
 		SessionID   model.SessionID
 		CharacterID int
 	}
@@ -22,7 +22,7 @@ type (
 
 var ErrAnotherSession = errors.New("already in another session")
 
-func Join(ctx context.Context, ports Ports, req Request) error {
+func Join(ctx context.Context, ports JoinPorts, req JoinRequest) error {
 	session, err := ports.SessionRepository.FindByID(ctx, req.SessionID)
 	if err != nil {
 		return err

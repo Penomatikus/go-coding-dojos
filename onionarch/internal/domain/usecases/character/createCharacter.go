@@ -1,4 +1,4 @@
-package createcharacter
+package character
 
 import (
 	"context"
@@ -8,18 +8,18 @@ import (
 )
 
 type (
-	Ports struct {
+	CreatePorts struct {
 		PlayerRepository    repository.PlayerRepository
 		CharacterRepository repository.CharacterRepository
 	}
 
-	Request struct {
+	CreateRequest struct {
 		PlayerID          int
 		Name, Description string
 	}
 )
 
-func Create(ctx context.Context, ports Ports, reg Request) error {
+func Create(ctx context.Context, ports CreatePorts, reg CreateRequest) error {
 	_, err := ports.PlayerRepository.FindByID(ctx, reg.PlayerID)
 	if err != nil {
 		return err

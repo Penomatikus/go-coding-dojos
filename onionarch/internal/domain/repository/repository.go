@@ -21,7 +21,6 @@ type (
 
 	PlayerRepository interface {
 		Create(ctx context.Context, player *model.Player) error
-		Update(ctx context.Context, player *model.Player) error
 		FindByID(ctx context.Context, ID int) (*model.Player, error)
 	}
 

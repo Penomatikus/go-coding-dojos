@@ -1,4 +1,4 @@
-package updatecharacter
+package character
 
 import (
 	"context"
@@ -8,12 +8,12 @@ import (
 )
 
 type (
-	Ports struct {
+	UpdatePorts struct {
 		PlayerRepository    repository.PlayerRepository
 		CharacterRepository repository.CharacterRepository
 	}
 
-	Request struct {
+	UpdateRequest struct {
 		ID        int
 		PlayerID  int
 		Points    *int
@@ -21,7 +21,7 @@ type (
 	}
 )
 
-func Update(ctx context.Context, ports Ports, req Request) error {
+func Update(ctx context.Context, ports UpdatePorts, req UpdateRequest) error {
 	if req.Points == nil {
 		return nil
 	}

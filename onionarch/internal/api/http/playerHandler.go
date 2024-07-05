@@ -6,18 +6,18 @@ import (
 	"net/http"
 
 	"github.com/Penomatikus/onionarch/internal/domain/repository"
-	createplayer "github.com/Penomatikus/onionarch/internal/domain/usecases/player/createPlayer"
+	"github.com/Penomatikus/onionarch/internal/domain/usecases/player"
 )
 
 type playerHandler struct {
 	ctx               context.Context
-	createplayerPorts createplayer.Ports
+	createplayerPorts player.CreatePorts
 }
 
 func ProvidePlayerHandler(ctx context.Context, playerRepository repository.PlayerRepository) *playerHandler {
 	return &playerHandler{
 		ctx: ctx,
-		createplayerPorts: createplayer.Ports{
+		createplayerPorts: player.CreatePorts{
 			PlayerRepository: playerRepository,
 		},
 	}
@@ -29,12 +29,12 @@ func (handler *playerHandler) CreatePlayer(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	var request createplayer.Request
+	var request player.CreateRequest
 	if err := decodeRequest(&request, w, r); err != nil {
 		return
 	}
 
-	err := createplayer.Create(handler.ctx, handler.createplayerPorts, request)
+	err := player.Create(handler.ctx, handler.createplayerPorts, request)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("error creating player: %v", err), http.StatusBadRequest)
 		return

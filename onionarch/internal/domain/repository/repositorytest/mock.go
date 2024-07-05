@@ -101,17 +101,6 @@ func (repo *playerRepository) Create(ctx context.Context, player *model.Player) 
 	return nil
 }
 
-func (repo *playerRepository) Update(ctx context.Context, player *model.Player) error {
-	p, ok := repo.store.Player[player.ID]
-	if !ok {
-		return repository.ErrNotFound
-	}
-
-	p.Name = player.Name
-	repo.store.Player[player.ID] = p
-	return nil
-}
-
 func (repo *playerRepository) FindByID(ctx context.Context, ID int) (*model.Player, error) {
 	p, ok := repo.store.Player[ID]
 	if !ok {
