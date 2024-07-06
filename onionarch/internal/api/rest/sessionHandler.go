@@ -59,7 +59,6 @@ func (handler *SessionHandler) LeaveSession() http.Handler {
 
 func (handler *SessionHandler) startSession() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
 		if methodAllowed(http.MethodPost, w, r) != nil {
 			return
 		}
