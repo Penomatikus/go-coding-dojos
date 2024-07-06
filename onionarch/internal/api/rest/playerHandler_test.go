@@ -1,4 +1,4 @@
-package http
+package rest
 
 import (
 	"bytes"
@@ -15,7 +15,7 @@ func Test_CreatePerson_Success(t *testing.T) {
 	ctx := context.Background()
 	dbStore := repositorytest.NewDBStore()
 
-	handler := ProvidePlayerHandler(ctx, repositorytest.ProvidePlayerRepository(&dbStore))
+	handler := NewPlayerHandler(ctx, repositorytest.ProvidePlayerRepository(&dbStore))
 	jsonData, err := json.Marshal(player.CreateRequest{Name: "Maggus"})
 	if err != nil {
 		t.Fatalf("%s: Error marshalling data to JSON", err)
@@ -24,7 +24,7 @@ func Test_CreatePerson_Success(t *testing.T) {
 	req := httptest.NewRequest("POST", "/api/v1/fatecore/player/new", bytes.NewReader(jsonData))
 	rec := httptest.NewRecorder()
 
-	handler.CreatePlayer(rec, req)
+	handler.CreatePlayer().ServeHTTP(rec, req)
 	res := rec.Result()
 	defer res.Body.Close()
 

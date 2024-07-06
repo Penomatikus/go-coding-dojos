@@ -1,4 +1,4 @@
-package http
+package rest
 
 import (
 	"bytes"
@@ -38,7 +38,7 @@ func Test_Session_Success(t *testing.T) {
 		t.Fatalf("%s: Error creating player", err)
 	}
 
-	handler := ProvidesessionHandler(ctx, characterRepo, playerRepo, sessionIdGen, sessioenRepo)
+	handler := NewSessionHandler(ctx, characterRepo, playerRepo, sessionIdGen, sessioenRepo)
 
 	var sessionID *string
 	t.Run("Start session", func(t *testing.T) {
@@ -54,7 +54,7 @@ func Test_Session_Success(t *testing.T) {
 		req := httptest.NewRequest("POST", "/api/v1/fatecore/session/new", bytes.NewReader(jsonData))
 		rec := httptest.NewRecorder()
 
-		handler.StartSession(rec, req)
+		handler.StartSession().ServeHTTP(rec, req)
 
 		res := rec.Result()
 		defer res.Body.Close()
@@ -86,7 +86,7 @@ func Test_Session_Success(t *testing.T) {
 		req.SetPathValue("sessionid", *sessionID)
 		rec := httptest.NewRecorder()
 
-		handler.JoinSession(rec, req)
+		handler.JoinSession().ServeHTTP(rec, req)
 
 		res := rec.Result()
 		defer res.Body.Close()
@@ -119,7 +119,7 @@ func Test_Session_Success(t *testing.T) {
 		req.SetPathValue("sessionid", *sessionID)
 		rec := httptest.NewRecorder()
 
-		handler.LeaveSession(rec, req)
+		handler.LeaveSession().ServeHTTP(rec, req)
 
 		res := rec.Result()
 		defer res.Body.Close()

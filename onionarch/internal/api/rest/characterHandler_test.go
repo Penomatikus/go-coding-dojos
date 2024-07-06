@@ -1,4 +1,4 @@
-package http
+package rest
 
 import (
 	"bytes"
@@ -26,7 +26,7 @@ func Test_CreateCharacter(t *testing.T) {
 		t.Fatalf("%s: Error creating player", err)
 	}
 
-	handler := ProvideCharacterHandler(ctx,
+	handler := NewCharacterHandler(ctx,
 		repositorytest.ProvideCharacterRepository(&dbStore),
 		playerRepo,
 	)
@@ -44,7 +44,7 @@ func Test_CreateCharacter(t *testing.T) {
 	req := httptest.NewRequest("POST", "/api/v1/fatecore/character/new", bytes.NewReader(jsonData))
 	rec := httptest.NewRecorder()
 
-	handler.CreateCharacter(rec, req)
+	handler.CreateCharacter().ServeHTTP(rec, req)
 	res := rec.Result()
 	defer res.Body.Close()
 

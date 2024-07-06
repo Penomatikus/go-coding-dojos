@@ -1,4 +1,4 @@
-package http
+package rest
 
 import (
 	"bytes"
@@ -15,7 +15,7 @@ import (
 
 func Test_SendNotification(t *testing.T) {
 	ctx := context.Background()
-	notificationHandler := ProvideNotificationHandler(
+	notificationHandler := NewNotificationHandler(
 		ctx,
 		notification.PrivideService(),
 	)
@@ -33,7 +33,7 @@ func Test_SendNotification(t *testing.T) {
 	req := httptest.NewRequest("POST", "/api/v1/fatecore/session/1337/notification", bytes.NewReader(jsonData))
 	rec := httptest.NewRecorder()
 
-	notificationHandler.SendNotification(rec, req)
+	notificationHandler.SendNotification().ServeHTTP(rec, req)
 
 	res := rec.Result()
 	defer res.Body.Close()
@@ -45,7 +45,7 @@ func Test_SendNotification(t *testing.T) {
 
 func Test_ReceiveNotification(t *testing.T) {
 	ctx := context.Background()
-	notificationHandler := ProvideNotificationHandler(
+	notificationHandler := NewNotificationHandler(
 		ctx,
 		notification.PrivideService(),
 	)
@@ -63,7 +63,7 @@ func Test_ReceiveNotification(t *testing.T) {
 	req := httptest.NewRequest("POST", "/api/v1/fatecore/session/1337/notification", bytes.NewReader(jsonData))
 	rec := httptest.NewRecorder()
 
-	notificationHandler.SendNotification(rec, req)
+	notificationHandler.SendNotification().ServeHTTP(rec, req)
 	res := rec.Result()
 	defer res.Body.Close()
 
@@ -80,7 +80,7 @@ func Test_ReceiveNotification(t *testing.T) {
 	req = httptest.NewRequest("GET", "/api/v1/fatecore/session/1337/notification", bytes.NewReader(jsonData))
 	rec = httptest.NewRecorder()
 
-	notificationHandler.CollectNotification(rec, req)
+	notificationHandler.CollectNotification().ServeHTTP(rec, req)
 	res = rec.Result()
 	defer res.Body.Close()
 
