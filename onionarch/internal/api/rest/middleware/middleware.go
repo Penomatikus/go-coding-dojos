@@ -5,12 +5,12 @@ import (
 	"net/http"
 )
 
-// Convinient type for: "func (next http.Handler) http.Handler"
+// Convinient type for "a middleware is just a handler calling another handler"
 type Middleware func(http.Handler) http.Handler
 
 // Compose chains Middlewares in order of appearance.
 //
-//	// Results in callstack: m3, m2, m1, handler
+//	// Results in callstack: m1, m2, m3, handler
 //	Compose(m1, m2, m3)(handler)
 func Compose(chain ...Middleware) Middleware {
 	return func(handler http.Handler) http.Handler {
