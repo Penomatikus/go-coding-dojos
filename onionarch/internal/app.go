@@ -2,6 +2,7 @@ package internal
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/Penomatikus/onionarch/internal/api/rest"
 	"github.com/Penomatikus/onionarch/internal/infrastructure/db"
@@ -42,8 +43,20 @@ func Initialize(ctx context.Context) *app {
 	}
 }
 
-// https://www.alexedwards.net/blog/making-and-using-middleware
-// https://surajincloud.com/understanding-http-server-in-go-mux
-// func NewMux() *http.ServeMux {
+func NewRouterV1(app *app) *http.ServeMux {
+	router := http.NewServeMux()
+	router.HandleFunc("POST /session/new", app.SessionHandler.StartSession)
+	router.HandleFunc("POST /session/{sessionid}/join", app.SessionHandler.JoinSession)
+	router.HandleFunc("POST /session/{sessionid}/leave", app.SessionHandler.LeaveSession)
+	router.HandleFunc("POST /character/new", app.CharacterHandler.CreateCharacter)
+	router.HandleFunc("POST /character/{id}/update", app.CharacterHandler.UpdateCharacter)
+	router.HandleFunc("POST /player/new", app.PlayerHandler.CreatePlayer)
+	router.HandleFunc("POST /session/{sessionid}/notification", app.NotificationHandler.SendNotification)
+	router.HandleFunc("GET /session/{sessionid}/notification", app.NotificationHandler.CollectNotification)
 
-// }
+	base := "/api/v1/fatecore"
+	v1 := http.NewServeMux()
+	v1.Handle(base+"/", http.StripPrefix(base, router))
+
+	return v1
+}

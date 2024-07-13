@@ -32,51 +32,47 @@ func NewCharacterHandler(ctx context.Context,
 }
 
 // route: /api/v1/fatecore/character/new
-func (handler *CharacterHandler) CreateCharacter() http.Handler {
-	return handler.createCharacter()
+func (handler *CharacterHandler) CreateCharacter(w http.ResponseWriter, r *http.Request) {
+	handler.createCharacter(w, r)
 }
 
 // route: /api/v1/fatecore/character/{id}/update
-func (handler *CharacterHandler) UpdateCharacter() http.Handler {
-	return handler.updateCharacter()
+func (handler *CharacterHandler) UpdateCharacter(w http.ResponseWriter, r *http.Request) {
+	handler.updateCharacter(w, r)
 }
 
-func (handler *CharacterHandler) createCharacter() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if err := methodAllowed(http.MethodPost, w, r); err != nil {
-			return
-		}
+func (handler *CharacterHandler) createCharacter(w http.ResponseWriter, r *http.Request) {
+	if err := methodAllowed(http.MethodPost, w, r); err != nil {
+		return
+	}
 
-		var request character.CreateRequest
-		if err := decodeRequest(&request, w, r); err != nil {
-			return
-		}
+	var request character.CreateRequest
+	if err := decodeRequest(&request, w, r); err != nil {
+		return
+	}
 
-		if err := character.Create(handler.ctx, handler.createPorts, request); err != nil {
-			http.Error(w, fmt.Sprintf("error while creating chraracter: %v", err), http.StatusBadRequest)
-			return
-		}
+	if err := character.Create(handler.ctx, handler.createPorts, request); err != nil {
+		http.Error(w, fmt.Sprintf("error while creating chraracter: %v", err), http.StatusBadRequest)
+		return
+	}
 
-		w.WriteHeader(http.StatusOK)
-	})
+	w.WriteHeader(http.StatusOK)
 }
 
-func (handler *CharacterHandler) updateCharacter() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if err := methodAllowed(http.MethodPost, w, r); err != nil {
-			return
-		}
+func (handler *CharacterHandler) updateCharacter(w http.ResponseWriter, r *http.Request) {
+	if err := methodAllowed(http.MethodPost, w, r); err != nil {
+		return
+	}
 
-		var request character.UpdateRequest
-		if err := decodeRequest(&request, w, r); err != nil {
-			return
-		}
+	var request character.UpdateRequest
+	if err := decodeRequest(&request, w, r); err != nil {
+		return
+	}
 
-		if err := character.Update(handler.ctx, handler.updatePorts, request); err != nil {
-			http.Error(w, fmt.Sprintf("error while updating chraracter: %v", err), http.StatusBadRequest)
-			return
-		}
+	if err := character.Update(handler.ctx, handler.updatePorts, request); err != nil {
+		http.Error(w, fmt.Sprintf("error while updating chraracter: %v", err), http.StatusBadRequest)
+		return
+	}
 
-		w.WriteHeader(http.StatusOK)
-	})
+	w.WriteHeader(http.StatusOK)
 }

@@ -44,7 +44,7 @@ func Test_CreateCharacter(t *testing.T) {
 	req := httptest.NewRequest("POST", "/api/v1/fatecore/character/new", bytes.NewReader(jsonData))
 	rec := httptest.NewRecorder()
 
-	handler.CreateCharacter().ServeHTTP(rec, req)
+	handler.CreateCharacter(rec, req)
 	res := rec.Result()
 	defer res.Body.Close()
 

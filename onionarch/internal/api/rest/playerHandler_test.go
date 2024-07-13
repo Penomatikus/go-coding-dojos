@@ -24,7 +24,7 @@ func Test_CreatePerson_Success(t *testing.T) {
 	req := httptest.NewRequest("POST", "/api/v1/fatecore/player/new", bytes.NewReader(jsonData))
 	rec := httptest.NewRecorder()
 
-	handler.CreatePlayer().ServeHTTP(rec, req)
+	handler.CreatePlayer(rec, req)
 	res := rec.Result()
 	defer res.Body.Close()
 

@@ -54,7 +54,7 @@ func Test_Session_Success(t *testing.T) {
 		req := httptest.NewRequest("POST", "/api/v1/fatecore/session/new", bytes.NewReader(jsonData))
 		rec := httptest.NewRecorder()
 
-		handler.StartSession().ServeHTTP(rec, req)
+		handler.StartSession(rec, req)
 
 		res := rec.Result()
 		defer res.Body.Close()
@@ -86,7 +86,7 @@ func Test_Session_Success(t *testing.T) {
 		req.SetPathValue("sessionid", *sessionID)
 		rec := httptest.NewRecorder()
 
-		handler.JoinSession().ServeHTTP(rec, req)
+		handler.JoinSession(rec, req)
 
 		res := rec.Result()
 		defer res.Body.Close()
@@ -119,7 +119,7 @@ func Test_Session_Success(t *testing.T) {
 		req.SetPathValue("sessionid", *sessionID)
 		rec := httptest.NewRecorder()
 
-		handler.LeaveSession().ServeHTTP(rec, req)
+		handler.LeaveSession(rec, req)
 
 		res := rec.Result()
 		defer res.Body.Close()

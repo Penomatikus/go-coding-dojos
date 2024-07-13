@@ -24,23 +24,21 @@ func NewPlayerHandler(ctx context.Context, playerRepository repository.PlayerRep
 }
 
 // route: /api/v1/fatecore/player/new
-func (handler *PlayerHandler) CreatePlayer() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if methodAllowed(http.MethodPost, w, r) != nil {
-			return
-		}
+func (handler *PlayerHandler) CreatePlayer(w http.ResponseWriter, r *http.Request) {
+	if methodAllowed(http.MethodPost, w, r) != nil {
+		return
+	}
 
-		var request player.CreateRequest
-		if err := decodeRequest(&request, w, r); err != nil {
-			return
-		}
+	var request player.CreateRequest
+	if err := decodeRequest(&request, w, r); err != nil {
+		return
+	}
 
-		err := player.Create(handler.ctx, handler.createplayerPorts, request)
-		if err != nil {
-			http.Error(w, fmt.Sprintf("error creating player: %v", err), http.StatusBadRequest)
-			return
-		}
+	err := player.Create(handler.ctx, handler.createplayerPorts, request)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("error creating player: %v", err), http.StatusBadRequest)
+		return
+	}
 
-		w.WriteHeader(http.StatusOK)
-	})
+	w.WriteHeader(http.StatusOK)
 }
