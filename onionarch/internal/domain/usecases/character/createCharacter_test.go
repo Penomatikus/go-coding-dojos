@@ -32,7 +32,7 @@ func Test_CreateCharacter_Success(t *testing.T) {
 		t.Fatalf("id was %d expected %d", character.ID, 1)
 	}
 
-	if character.Points != 100 {
+	if character.Points != 0 {
 		t.Fatalf("points were %d expected %d", character.Points, 0)
 	}
 }
