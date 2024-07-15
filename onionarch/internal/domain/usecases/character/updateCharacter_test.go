@@ -38,7 +38,6 @@ func Test_UpdateCharacter_Success(t *testing.T) {
 	sId := model.SessionID("1")
 	err := Update(context.Background(), ports, UpdateRequest{
 		ID:        1,
-		PlayerID:  1,
 		Points:    &points,
 		SessionID: &sId,
 	})

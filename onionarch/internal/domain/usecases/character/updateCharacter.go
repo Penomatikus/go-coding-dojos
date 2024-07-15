@@ -15,7 +15,6 @@ type (
 
 	UpdateRequest struct {
 		ID        int
-		PlayerID  int
 		Points    *int
 		SessionID *model.SessionID
 	}
@@ -25,13 +24,7 @@ func Update(ctx context.Context, ports UpdatePorts, req UpdateRequest) error {
 	if req.Points == nil {
 		return nil
 	}
-
-	_, err := ports.PlayerRepository.FindByID(ctx, req.PlayerID)
-	if err != nil {
-		return err
-	}
-
-	_, err = ports.CharacterRepository.FindByID(ctx, req.ID)
+	_, err := ports.CharacterRepository.FindByID(ctx, req.ID)
 	if err != nil {
 		return err
 	}
