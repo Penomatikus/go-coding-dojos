@@ -25,7 +25,6 @@ func NewCharacterHandler(ctx context.Context,
 			CharacterRepository: characterRepository,
 		},
 		updatePorts: character.UpdatePorts{
-			PlayerRepository:    playerRepository,
 			CharacterRepository: characterRepository,
 		},
 	}

@@ -31,7 +31,6 @@ func Test_UpdateCharacter_Success(t *testing.T) {
 	}
 
 	ports := UpdatePorts{
-		PlayerRepository:    playerRepo,
 		CharacterRepository: characterRepo,
 	}
 	points := 99

@@ -9,7 +9,6 @@ import (
 
 type (
 	UpdatePorts struct {
-		PlayerRepository    repository.PlayerRepository
 		CharacterRepository repository.CharacterRepository
 	}
 
