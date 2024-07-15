@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/Penomatikus/onionarch/internal/domain/model"
 	"github.com/Penomatikus/onionarch/internal/domain/repository/repositorytest"
@@ -22,23 +21,14 @@ func Test_Session_Success(t *testing.T) {
 
 	sessioenRepo := repositorytest.ProvideSessionRepository(&dbStrore)
 
-	playerRepo := repositorytest.ProvidePlayerRepository(&dbStrore)
-	if err := playerRepo.Create(ctx, &model.Player{
-		CreatedAt: time.Now(),
-		Name:      "Test",
-	}); err != nil {
-		t.Fatalf("%s: Error creating player", err)
-	}
-
 	characterRepo := repositorytest.ProvideCharacterRepository(&dbStrore)
 	if err := characterRepo.Create(ctx, &model.Character{
-		Name:     "Test",
-		PlayerID: 1,
+		Name: "Test",
 	}); err != nil {
-		t.Fatalf("%s: Error creating player", err)
+		t.Fatalf("%s: Error creating character", err)
 	}
 
-	handler := NewSessionHandler(ctx, characterRepo, playerRepo, sessionIdGen, sessioenRepo)
+	handler := NewSessionHandler(ctx, characterRepo, sessionIdGen, sessioenRepo)
 
 	var sessionID *string
 	t.Run("Start session", func(t *testing.T) {

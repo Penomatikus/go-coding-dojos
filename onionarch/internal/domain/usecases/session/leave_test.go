@@ -24,7 +24,6 @@ func Test_Leave_Succes(t *testing.T) {
 	db.Character[charID] = &model.Character{
 		ID:        1,
 		SessionID: &sessionID,
-		PlayerID:  1,
 		Points:    100,
 	}
 

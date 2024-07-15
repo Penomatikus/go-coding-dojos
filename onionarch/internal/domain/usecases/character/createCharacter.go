@@ -9,25 +9,17 @@ import (
 
 type (
 	CreatePorts struct {
-		PlayerRepository    repository.PlayerRepository
 		CharacterRepository repository.CharacterRepository
 	}
 
 	CreateRequest struct {
-		PlayerID          int
 		Name, Description string
 	}
 )
 
 func Create(ctx context.Context, ports CreatePorts, reg CreateRequest) error {
-	_, err := ports.PlayerRepository.FindByID(ctx, reg.PlayerID)
-	if err != nil {
-		return err
-	}
-
 	return ports.CharacterRepository.Create(ctx, &model.Character{
 		Name:        reg.Name,
 		Description: reg.Description,
-		PlayerID:    reg.PlayerID,
 	})
 }

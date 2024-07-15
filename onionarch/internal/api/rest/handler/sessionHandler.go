@@ -21,14 +21,12 @@ type SessionHandler struct {
 
 func NewSessionHandler(ctx context.Context,
 	characterRepository repository.CharacterRepository,
-	playerRepository repository.PlayerRepository,
 	sessionIDGen sessionid.Generator,
 	sessionRepository repository.SessionRepository,
 ) *SessionHandler {
 	return &SessionHandler{
 		ctx: ctx,
 		startsessionPorts: session.StartPorts{
-			PlayerRepository:   playerRepository,
 			SessionRepository:  sessionRepository,
 			SessionIDGenerator: sessionIDGen,
 		},

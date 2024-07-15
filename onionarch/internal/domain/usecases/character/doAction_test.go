@@ -33,7 +33,6 @@ func Test_DoAction(t *testing.T) {
 	if err := characterRepo.Create(ctx, &model.Character{
 		Name:        "Tester",
 		Description: "Möp",
-		PlayerID:    1,
 		SessionID:   &sessionID,
 	}); err != nil {
 		t.Fatal(err)

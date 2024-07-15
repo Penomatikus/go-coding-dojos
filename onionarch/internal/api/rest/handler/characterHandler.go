@@ -16,13 +16,10 @@ type CharacterHandler struct {
 	updatePorts character.UpdatePorts
 }
 
-func NewCharacterHandler(ctx context.Context,
-	characterRepository repository.CharacterRepository,
-	playerRepository repository.PlayerRepository) *CharacterHandler {
+func NewCharacterHandler(ctx context.Context, characterRepository repository.CharacterRepository) *CharacterHandler {
 	return &CharacterHandler{
 		ctx: ctx,
 		createPorts: character.CreatePorts{
-			PlayerRepository:    playerRepository,
 			CharacterRepository: characterRepository,
 		},
 		updatePorts: character.UpdatePorts{

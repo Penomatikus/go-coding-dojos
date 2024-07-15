@@ -16,9 +16,8 @@ func Test_UpdateCharacter_Success(t *testing.T) {
 	if err := characterRepo.Create(ctx, &model.Character{
 		Name:        "Tester",
 		Description: "Möp",
-		PlayerID:    1,
 	}); err != nil {
-		t.Fatalf("%s: Error creating player", err)
+		t.Fatalf("%s: Error creating chracacter", err)
 	}
 
 	ports := UpdatePorts{
@@ -43,10 +42,6 @@ func Test_UpdateCharacter_Success(t *testing.T) {
 
 	if character.ID != 1 {
 		t.Fatalf("id was %d expected %d", character.ID, 1)
-	}
-
-	if character.PlayerID != 1 {
-		t.Fatalf("playerId was %d expected %d", character.PlayerID, 1)
 	}
 
 	if character.Points != points {

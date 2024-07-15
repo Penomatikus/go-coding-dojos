@@ -13,7 +13,6 @@ import (
 type app struct {
 	characterHandler    *handler.CharacterHandler
 	notificationHandler *handler.NotificationHandler
-	playerHandler       *handler.PlayerHandler
 	sessionHandler      *handler.SessionHandler
 	doActionHandler     *handler.DoActionHandler
 }
@@ -27,20 +26,17 @@ func Initialize(ctx context.Context) *app {
 
 	// domain
 	characterRepo := db.ProvideCharacterRepository(&dbStore)
-	playerRepo := db.ProvidePlayerRepository(&dbStore)
 	sessionRepo := db.ProvideSessionRepository(&dbStore)
 
 	// handlers
-	characterHandler := handler.NewCharacterHandler(ctx, characterRepo, playerRepo)
+	characterHandler := handler.NewCharacterHandler(ctx, characterRepo)
 	doActionHandler := handler.NewDoActionHandler(ctx, characterRepo, sessionRepo)
 	notificationHanlder := handler.NewNotificationHandler(ctx, notificationService)
-	playerHandler := handler.NewPlayerHandler(ctx, playerRepo)
-	sessionHandler := handler.NewSessionHandler(ctx, characterRepo, playerRepo, sessionIDGen, sessionRepo)
+	sessionHandler := handler.NewSessionHandler(ctx, characterRepo, sessionIDGen, sessionRepo)
 
 	return &app{
 		characterHandler:    characterHandler,
 		notificationHandler: notificationHanlder,
-		playerHandler:       playerHandler,
 		sessionHandler:      sessionHandler,
 		doActionHandler:     doActionHandler,
 	}
@@ -54,7 +50,6 @@ func NewRouterV1(app *app) *http.ServeMux {
 	router.HandleFunc("POST /character/new", app.characterHandler.CreateCharacter)
 	router.HandleFunc("POST /character/do", app.doActionHandler.DoAction)
 	router.HandleFunc("POST /character/{id}/update", app.characterHandler.UpdateCharacter)
-	router.HandleFunc("POST /player/new", app.playerHandler.CreatePlayer)
 	router.HandleFunc("POST /session/{sessionid}/notification", app.notificationHandler.SendNotification)
 	router.HandleFunc("GET /session/{sessionid}/notification", app.notificationHandler.CollectNotification)
 

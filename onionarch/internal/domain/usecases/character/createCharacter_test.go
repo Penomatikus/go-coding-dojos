@@ -3,27 +3,18 @@ package character
 import (
 	"context"
 	"testing"
-	"time"
 
-	"github.com/Penomatikus/onionarch/internal/domain/model"
 	"github.com/Penomatikus/onionarch/internal/domain/repository/repositorytest"
 )
 
 func Test_CreateCharacter_Success(t *testing.T) {
 	db := repositorytest.NewDBStore()
-	db.Player[1] = &model.Player{
-		ID:        1,
-		CreatedAt: time.Now(),
-		Name:      "Ingeborg",
-	}
 
 	ports := CreatePorts{
-		PlayerRepository:    repositorytest.ProvidePlayerRepository(&db),
 		CharacterRepository: repositorytest.ProvideCharacterRepository(&db),
 	}
 
 	err := Create(context.Background(), ports, CreateRequest{
-		PlayerID:    1,
 		Name:        "Wilde Inge",
 		Description: "Wild wie zwei Juttas",
 	})
@@ -39,10 +30,6 @@ func Test_CreateCharacter_Success(t *testing.T) {
 
 	if character.ID != 1 {
 		t.Fatalf("id was %d expected %d", character.ID, 1)
-	}
-
-	if character.PlayerID != 1 {
-		t.Fatalf("playerId was %d expected %d", character.PlayerID, 1)
 	}
 
 	if character.Points != 100 {

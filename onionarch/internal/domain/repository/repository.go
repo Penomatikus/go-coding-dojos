@@ -19,11 +19,6 @@ type (
 		FindByID(ctx context.Context, sessionID model.SessionID) (*model.Session, error)
 	}
 
-	PlayerRepository interface {
-		Create(ctx context.Context, player *model.Player) error
-		FindByID(ctx context.Context, ID int) (*model.Player, error)
-	}
-
 	CharacterRepository interface {
 		Create(ctx context.Context, character *model.Character) error
 		Update(ctx context.Context, character *model.Character) error

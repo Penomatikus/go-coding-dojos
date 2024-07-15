@@ -22,9 +22,8 @@ func Test_JoinSession_Success(t *testing.T) {
 
 	charID := 1
 	db.Character[charID] = &model.Character{
-		ID:       1,
-		PlayerID: 1,
-		Points:   100,
+		ID:     1,
+		Points: 100,
 	}
 
 	ports := JoinPorts{

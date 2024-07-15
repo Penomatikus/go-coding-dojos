@@ -10,29 +10,22 @@ import (
 
 type dbStore struct {
 	Character map[int]*model.Character
-	Player    map[int]*model.Player
 	Session   map[model.SessionID]*model.Session
 }
 
 func NewDBStore() dbStore {
 	return dbStore{
 		Character: make(map[int]*model.Character),
-		Player:    make(map[int]*model.Player),
 		Session:   make(map[model.SessionID]*model.Session),
 	}
 }
 
-const (
-	_CHARACTER = iota
-	_PLAYER
-)
+const _CHARACTER = 0
 
 func (db *dbStore) autoIncrement(tableType int) int {
 	switch tableType {
 	case _CHARACTER:
 		return len(db.Character) + 1
-	case _PLAYER:
-		return len(db.Player) + 1
 	default:
 		panic(fmt.Sprintf("unkown table type %d", tableType))
 	}
@@ -40,13 +33,11 @@ func (db *dbStore) autoIncrement(tableType int) int {
 
 type (
 	characterRepository struct{ store *dbStore }
-	playerRepository    struct{ store *dbStore }
 	sessionRepository   struct{ store *dbStore }
 )
 
 var (
 	_ repository.CharacterRepository = &characterRepository{}
-	_ repository.PlayerRepository    = &playerRepository{}
 	_ repository.SessionRepository   = &sessionRepository{}
 )
 
@@ -85,28 +76,6 @@ func (repo *sessionRepository) Update(ctx context.Context, session *model.Sessio
 	}
 
 	return nil
-}
-
-func ProvidePlayerRepository(dbStore *dbStore) repository.PlayerRepository {
-	return &playerRepository{store: dbStore}
-}
-
-func (repo *playerRepository) Create(ctx context.Context, player *model.Player) error {
-	player.ID = repo.store.autoIncrement(_PLAYER)
-	if _, ok := repo.store.Player[player.ID]; ok {
-		return repository.ErrAlreadyExists
-	}
-
-	repo.store.Player[player.ID] = player
-	return nil
-}
-
-func (repo *playerRepository) FindByID(ctx context.Context, ID int) (*model.Player, error) {
-	p, ok := repo.store.Player[ID]
-	if !ok {
-		return nil, repository.ErrNotFound
-	}
-	return p, nil
 }
 
 func ProvideCharacterRepository(dbStore *dbStore) repository.CharacterRepository {
