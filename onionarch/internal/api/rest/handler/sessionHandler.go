@@ -1,10 +1,11 @@
-package rest
+package handler
 
 import (
 	"context"
 	"fmt"
 	"net/http"
 
+	"github.com/Penomatikus/onionarch/internal/api/rest"
 	"github.com/Penomatikus/onionarch/internal/domain/model"
 	"github.com/Penomatikus/onionarch/internal/domain/repository"
 	"github.com/Penomatikus/onionarch/internal/domain/sessionid"
@@ -58,12 +59,8 @@ func (handler *SessionHandler) LeaveSession(w http.ResponseWriter, r *http.Reque
 }
 
 func (handler *SessionHandler) startSession(w http.ResponseWriter, r *http.Request) {
-	if methodAllowed(http.MethodPost, w, r) != nil {
-		return
-	}
-
 	var request session.StartRequest
-	if err := decodeRequest(&request, w, r); err != nil {
+	if err := rest.DecodeRequest(&request, w, r); err != nil {
 		return
 	}
 
@@ -79,16 +76,12 @@ func (handler *SessionHandler) startSession(w http.ResponseWriter, r *http.Reque
 }
 
 func (handler *SessionHandler) joinSession(w http.ResponseWriter, r *http.Request) {
-	if methodAllowed(http.MethodPost, w, r) != nil {
-		return
-	}
-
 	var request session.JoinRequest
-	if err := decodeRequest(&request, w, r); err != nil {
+	if err := rest.DecodeRequest(&request, w, r); err != nil {
 		return
 	}
 
-	sID, ok := pathValues(r, "sessionid")["sessionid"]
+	sID, ok := rest.PathValues(r, "sessionid")["sessionid"]
 	if !ok {
 		http.Error(w, "error while reading session id from path", http.StatusBadRequest)
 		return
@@ -105,16 +98,12 @@ func (handler *SessionHandler) joinSession(w http.ResponseWriter, r *http.Reques
 }
 
 func (handler *SessionHandler) leaveSession(w http.ResponseWriter, r *http.Request) {
-	if methodAllowed(http.MethodPost, w, r) != nil {
-		return
-	}
-
 	var request session.LeaveRequest
-	if err := decodeRequest(&request, w, r); err != nil {
+	if err := rest.DecodeRequest(&request, w, r); err != nil {
 		return
 	}
 
-	sID, ok := pathValues(r, "sessionid")["sessionid"]
+	sID, ok := rest.PathValues(r, "sessionid")["sessionid"]
 	if !ok {
 		http.Error(w, "error while reading session id from path", http.StatusBadRequest)
 		return

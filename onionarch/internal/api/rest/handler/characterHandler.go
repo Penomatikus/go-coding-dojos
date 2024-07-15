@@ -1,10 +1,11 @@
-package rest
+package handler
 
 import (
 	"context"
 	"fmt"
 	"net/http"
 
+	"github.com/Penomatikus/onionarch/internal/api/rest"
 	"github.com/Penomatikus/onionarch/internal/domain/repository"
 	"github.com/Penomatikus/onionarch/internal/domain/usecases/character"
 )
@@ -41,12 +42,8 @@ func (handler *CharacterHandler) UpdateCharacter(w http.ResponseWriter, r *http.
 }
 
 func (handler *CharacterHandler) createCharacter(w http.ResponseWriter, r *http.Request) {
-	if err := methodAllowed(http.MethodPost, w, r); err != nil {
-		return
-	}
-
 	var request character.CreateRequest
-	if err := decodeRequest(&request, w, r); err != nil {
+	if err := rest.DecodeRequest(&request, w, r); err != nil {
 		return
 	}
 
@@ -59,12 +56,8 @@ func (handler *CharacterHandler) createCharacter(w http.ResponseWriter, r *http.
 }
 
 func (handler *CharacterHandler) updateCharacter(w http.ResponseWriter, r *http.Request) {
-	if err := methodAllowed(http.MethodPost, w, r); err != nil {
-		return
-	}
-
 	var request character.UpdateRequest
-	if err := decodeRequest(&request, w, r); err != nil {
+	if err := rest.DecodeRequest(&request, w, r); err != nil {
 		return
 	}
 

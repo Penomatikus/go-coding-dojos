@@ -1,4 +1,4 @@
-package rest
+package handler
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/Penomatikus/onionarch/internal/api/rest"
 	"github.com/Penomatikus/onionarch/internal/domain/model"
 	"github.com/Penomatikus/onionarch/internal/domain/notification"
 	infraNotification "github.com/Penomatikus/onionarch/internal/infrastructure/notification"
@@ -38,10 +39,6 @@ func (handler *NotificationHandler) CollectNotification(w http.ResponseWriter, r
 }
 
 func (handler *NotificationHandler) sendNotification(w http.ResponseWriter, r *http.Request) {
-	if methodAllowed(http.MethodPost, w, r) != nil {
-		return
-	}
-
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("error reading body from request: %v", err), http.StatusInternalServerError)
@@ -62,18 +59,14 @@ func (handler *NotificationHandler) sendNotification(w http.ResponseWriter, r *h
 }
 
 func (handler *NotificationHandler) collectNotification(w http.ResponseWriter, r *http.Request) {
-	if methodAllowed(http.MethodGet, w, r) != nil {
-		return
-	}
-
-	sID, ok := pathValues(r, "sessionid")["sessionid"]
+	sID, ok := rest.PathValues(r, "sessionid")["sessionid"]
 	if !ok {
 		http.Error(w, "error while reading session id from path", http.StatusBadRequest)
 		return
 	}
 
 	var request struct{ Offset int }
-	if err := decodeRequest(&request, w, r); err != nil {
+	if err := rest.DecodeRequest(&request, w, r); err != nil {
 		return
 	}
 

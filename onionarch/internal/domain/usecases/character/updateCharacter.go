@@ -23,6 +23,7 @@ func Update(ctx context.Context, ports UpdatePorts, req UpdateRequest) error {
 	if req.Points == nil {
 		return nil
 	}
+
 	_, err := ports.CharacterRepository.FindByID(ctx, req.ID)
 	if err != nil {
 		return err

@@ -3,7 +3,6 @@ package character
 import (
 	"context"
 	"testing"
-	"time"
 
 	"github.com/Penomatikus/onionarch/internal/domain/model"
 	"github.com/Penomatikus/onionarch/internal/domain/repository/repositorytest"
@@ -12,14 +11,6 @@ import (
 func Test_UpdateCharacter_Success(t *testing.T) {
 	ctx := context.Background()
 	dbStore := repositorytest.NewDBStore()
-
-	playerRepo := repositorytest.ProvidePlayerRepository(&dbStore)
-	if err := playerRepo.Create(ctx, &model.Player{
-		CreatedAt: time.Now(),
-		Name:      "Test",
-	}); err != nil {
-		t.Fatalf("%s: Error creating player", err)
-	}
 
 	characterRepo := repositorytest.ProvideCharacterRepository(&dbStore)
 	if err := characterRepo.Create(ctx, &model.Character{

@@ -2,6 +2,14 @@ package model
 
 import "time"
 
+// Dice returns an array represinting the fate dice
+//
+//	// -, -, , , +, +
+//	[...]int{-1, -1, 0, 0, 1, 1}
+func Dice() [6]int {
+	return [...]int{-1, -1, 0, 0, 1, 1}
+}
+
 type (
 	SessionID string
 

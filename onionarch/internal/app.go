@@ -4,17 +4,18 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/Penomatikus/onionarch/internal/api/rest"
+	"github.com/Penomatikus/onionarch/internal/api/rest/handler"
 	"github.com/Penomatikus/onionarch/internal/infrastructure/db"
 	"github.com/Penomatikus/onionarch/internal/infrastructure/notification"
 	"github.com/Penomatikus/onionarch/internal/infrastructure/sessionid"
 )
 
 type app struct {
-	CharacterHandler    *rest.CharacterHandler
-	NotificationHandler *rest.NotificationHandler
-	PlayerHandler       *rest.PlayerHandler
-	SessionHandler      *rest.SessionHandler
+	characterHandler    *handler.CharacterHandler
+	notificationHandler *handler.NotificationHandler
+	playerHandler       *handler.PlayerHandler
+	sessionHandler      *handler.SessionHandler
+	doActionHandler     *handler.DoActionHandler
 }
 
 func Initialize(ctx context.Context) *app {
@@ -30,29 +31,32 @@ func Initialize(ctx context.Context) *app {
 	sessionRepo := db.ProvideSessionRepository(&dbStore)
 
 	// handlers
-	characterHandler := rest.NewCharacterHandler(ctx, characterRepo, playerRepo)
-	notificationHanlder := rest.NewNotificationHandler(ctx, notificationService)
-	playerHandler := rest.NewPlayerHandler(ctx, playerRepo)
-	sessionHandler := rest.NewSessionHandler(ctx, characterRepo, playerRepo, sessionIDGen, sessionRepo)
+	characterHandler := handler.NewCharacterHandler(ctx, characterRepo, playerRepo)
+	doActionHandler := handler.NewDoActionHandler(ctx, characterRepo, sessionRepo)
+	notificationHanlder := handler.NewNotificationHandler(ctx, notificationService)
+	playerHandler := handler.NewPlayerHandler(ctx, playerRepo)
+	sessionHandler := handler.NewSessionHandler(ctx, characterRepo, playerRepo, sessionIDGen, sessionRepo)
 
 	return &app{
-		CharacterHandler:    characterHandler,
-		NotificationHandler: notificationHanlder,
-		PlayerHandler:       playerHandler,
-		SessionHandler:      sessionHandler,
+		characterHandler:    characterHandler,
+		notificationHandler: notificationHanlder,
+		playerHandler:       playerHandler,
+		sessionHandler:      sessionHandler,
+		doActionHandler:     doActionHandler,
 	}
 }
 
 func NewRouterV1(app *app) *http.ServeMux {
 	router := http.NewServeMux()
-	router.HandleFunc("POST /session/new", app.SessionHandler.StartSession)
-	router.HandleFunc("POST /session/{sessionid}/join", app.SessionHandler.JoinSession)
-	router.HandleFunc("POST /session/{sessionid}/leave", app.SessionHandler.LeaveSession)
-	router.HandleFunc("POST /character/new", app.CharacterHandler.CreateCharacter)
-	router.HandleFunc("POST /character/{id}/update", app.CharacterHandler.UpdateCharacter)
-	router.HandleFunc("POST /player/new", app.PlayerHandler.CreatePlayer)
-	router.HandleFunc("POST /session/{sessionid}/notification", app.NotificationHandler.SendNotification)
-	router.HandleFunc("GET /session/{sessionid}/notification", app.NotificationHandler.CollectNotification)
+	router.HandleFunc("POST /session/new", app.sessionHandler.StartSession)
+	router.HandleFunc("POST /session/{sessionid}/join", app.sessionHandler.JoinSession)
+	router.HandleFunc("POST /session/{sessionid}/leave", app.sessionHandler.LeaveSession)
+	router.HandleFunc("POST /character/new", app.characterHandler.CreateCharacter)
+	router.HandleFunc("POST /character/do", app.doActionHandler.DoAction)
+	router.HandleFunc("POST /character/{id}/update", app.characterHandler.UpdateCharacter)
+	router.HandleFunc("POST /player/new", app.playerHandler.CreatePlayer)
+	router.HandleFunc("POST /session/{sessionid}/notification", app.notificationHandler.SendNotification)
+	router.HandleFunc("GET /session/{sessionid}/notification", app.notificationHandler.CollectNotification)
 
 	base := "/api/v1/fatecore"
 	v1 := http.NewServeMux()
