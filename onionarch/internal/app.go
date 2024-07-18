@@ -16,7 +16,7 @@ type app struct {
 	characterHandler    *handler.CharacterHandler
 	notificationHandler *handler.NotificationHandler
 	sessionHandler      *handler.SessionHandler
-	doActionHandler     *handler.DoActionHandler
+	doHandler           *handler.DoHandler
 }
 
 func Initialize(ctx context.Context, eventSubscriber notification.EventSubscriber) *app {
@@ -33,7 +33,7 @@ func Initialize(ctx context.Context, eventSubscriber notification.EventSubscribe
 
 	// handlers
 	characterHandler := handler.NewCharacterHandler(ctx, characterRepo)
-	doActionHandler := handler.NewDoActionHandler(ctx, characterRepo, sessionRepo, notificationPublisher)
+	doHandler := handler.NewDoHandler(ctx, characterRepo, sessionRepo, notificationPublisher)
 	notificationHandler := handler.NewNotificationHandler(ctx, notificationConsumer)
 	sessionHandler := handler.NewSessionHandler(ctx,
 		notificationPublisher,
@@ -47,7 +47,7 @@ func Initialize(ctx context.Context, eventSubscriber notification.EventSubscribe
 		characterHandler:    characterHandler,
 		notificationHandler: notificationHandler,
 		sessionHandler:      sessionHandler,
-		doActionHandler:     doActionHandler,
+		doHandler:           doHandler,
 	}
 }
 
@@ -61,7 +61,8 @@ func NewRouterV1(app *app) *http.ServeMux {
 	router.HandleFunc("POST /session/{sessionid}/join", app.sessionHandler.JoinSession)
 	router.HandleFunc("POST /session/{sessionid}/leave", app.sessionHandler.LeaveSession)
 	router.HandleFunc("POST /character/new", app.characterHandler.CreateCharacter)
-	router.HandleFunc("POST /character/do", app.doActionHandler.DoAction)
+	router.HandleFunc("POST /character/do/action", app.doHandler.DoAction)
+	router.HandleFunc("POST /character/do/points", app.doHandler.DoPoints)
 	router.HandleFunc("POST /character/{id}/update", app.characterHandler.UpdateCharacter)
 	router.HandleFunc("GET /session/{sessionid}/notification", app.notificationHandler.CollectNotification)
 

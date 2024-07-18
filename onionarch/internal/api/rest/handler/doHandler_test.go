@@ -54,7 +54,7 @@ func Test_DoAction(t *testing.T) {
 	rec := httptest.NewRecorder()
 
 	notificationPublisher := notification.NewEventBus()
-	NewDoActionHandler(ctx, characterRepo, sessionRepo, notificationPublisher).DoAction(rec, req)
+	NewDoHandler(ctx, characterRepo, sessionRepo, notificationPublisher).DoAction(rec, req)
 
 	res := rec.Result()
 	defer res.Body.Close()
@@ -68,7 +68,7 @@ func Test_DoAction(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var response DoActionResponse
+	var response DoResponse
 	err = json.Unmarshal(body, &response)
 	if err != nil {
 		t.Fatal(err)

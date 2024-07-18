@@ -48,10 +48,16 @@ func Do(ctx context.Context, ports DoPorts, request DoRequest) (int, error) {
 		char.Points += request.Costs
 	}
 
+	// Master adjusting points, notififaction is not for character
+	fromId := char.ID
+	if session.Owner == request.CharacterID {
+		fromId = session.Owner
+	}
+
 	err = ports.NotificationPublisher.Publish(ctx, model.Notification{
 		CreatedAt: time.Now(),
 		SessionId: request.SessionID,
-		FromId:    char.ID,
+		FromId:    fromId,
 		Body:      []byte(fmt.Sprintf("%d points spent", request.Costs)),
 	})
 	if err != nil {
