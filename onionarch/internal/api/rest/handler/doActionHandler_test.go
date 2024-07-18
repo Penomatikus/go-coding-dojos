@@ -13,6 +13,7 @@ import (
 	"github.com/Penomatikus/onionarch/internal/domain/model"
 	"github.com/Penomatikus/onionarch/internal/domain/repository/repositorytest"
 	"github.com/Penomatikus/onionarch/internal/domain/usecases/character"
+	"github.com/Penomatikus/onionarch/internal/infrastructure/notification"
 )
 
 func Test_DoAction(t *testing.T) {
@@ -51,7 +52,9 @@ func Test_DoAction(t *testing.T) {
 
 	req := httptest.NewRequest("POST", "/api/v1/fatecore/character/do", bytes.NewReader(request))
 	rec := httptest.NewRecorder()
-	NewDoActionHandler(ctx, characterRepo, sessionRepo).DoAction(rec, req)
+
+	notificationPublisher := notification.NewEventBus()
+	NewDoActionHandler(ctx, characterRepo, sessionRepo, notificationPublisher).DoAction(rec, req)
 
 	res := rec.Result()
 	defer res.Body.Close()

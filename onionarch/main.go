@@ -12,12 +12,18 @@ import (
 
 	"github.com/Penomatikus/onionarch/internal"
 	"github.com/Penomatikus/onionarch/internal/api/rest/middleware"
+	"github.com/Penomatikus/onionarch/internal/domain/model"
 )
 
 func main() {
 
 	ctx := context.Background()
-	app := internal.Initialize(ctx)
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	eventSubscriber := make(chan model.Notification)
+	app := internal.Initialize(ctx, eventSubscriber)
+
 	router := internal.NewRouterV1(app)
 	middlewares := middleware.Compose(middleware.Auth, middleware.Log, middleware.Metrics)
 
@@ -31,6 +37,8 @@ func main() {
 			log.Fatalf("HTTP server error: %v", err)
 		}
 	}()
+
+	go internal.NewNotificationConsumer().Consum(ctx, eventSubscriber)
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)

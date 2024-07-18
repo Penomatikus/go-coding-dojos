@@ -2,10 +2,16 @@ package notification
 
 import (
 	"context"
-	"io"
+
+	"github.com/Penomatikus/onionarch/internal/domain/model"
 )
 
-type Service interface {
-	Send(ctx context.Context, p []byte, w io.Writer) error
-	Read(ctx context.Context, r io.Reader) ([]byte, error)
-}
+type (
+	Publisher interface {
+		Publish(ctx context.Context, notification model.Notification) error
+	}
+
+	Consumer interface {
+		Consum(ctx context.Context, notificationChan <-chan model.Notification) error
+	}
+)

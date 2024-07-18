@@ -3,16 +3,20 @@ package character
 import (
 	"context"
 	"errors"
+	"fmt"
 	"math"
+	"time"
 
 	"github.com/Penomatikus/onionarch/internal/domain/model"
+	"github.com/Penomatikus/onionarch/internal/domain/notification"
 	"github.com/Penomatikus/onionarch/internal/domain/repository"
 )
 
 type (
 	DoPorts struct {
-		CharacterRepository repository.CharacterRepository
-		SessionRepository   repository.SessionRepository
+		CharacterRepository   repository.CharacterRepository
+		SessionRepository     repository.SessionRepository
+		NotificationPublisher notification.Publisher
 	}
 
 	DoRequest struct {
@@ -42,6 +46,16 @@ func Do(ctx context.Context, ports DoPorts, request DoRequest) (int, error) {
 		char.Points -= int(math.Abs(float64(request.Costs)))
 	} else {
 		char.Points += request.Costs
+	}
+
+	err = ports.NotificationPublisher.Publish(ctx, model.Notification{
+		CreatedAt: time.Now(),
+		SessionId: request.SessionID,
+		FromId:    char.ID,
+		Body:      []byte(fmt.Sprintf("%d points spent", request.Costs)),
+	})
+	if err != nil {
+		return 0, err
 	}
 
 	return char.Points, ports.CharacterRepository.Update(ctx, char)

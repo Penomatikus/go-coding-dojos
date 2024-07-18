@@ -7,25 +7,39 @@ import (
 
 	"github.com/Penomatikus/onionarch/internal/api/rest"
 	"github.com/Penomatikus/onionarch/internal/domain/model"
+	"github.com/Penomatikus/onionarch/internal/domain/notification"
 	"github.com/Penomatikus/onionarch/internal/domain/repository"
 	"github.com/Penomatikus/onionarch/internal/domain/sessionid"
 	"github.com/Penomatikus/onionarch/internal/domain/usecases/session"
+	infraNotification "github.com/Penomatikus/onionarch/internal/infrastructure/notification"
 )
 
 type SessionHandler struct {
-	ctx               context.Context
-	startsessionPorts session.StartPorts
-	joinsessionPorts  session.JoinPorts
-	leavesessionPorts session.LeavePorts
+	ctx                    context.Context
+	notificationPublisher  *infraNotification.EventBus
+	notificationSubscriber infraNotification.EventSubscriber
+	startsessionPorts      session.StartPorts
+	joinsessionPorts       session.JoinPorts
+	leavesessionPorts      session.LeavePorts
 }
 
 func NewSessionHandler(ctx context.Context,
+	notificationPublisher notification.Publisher,
+	notificationSubscriber infraNotification.EventSubscriber,
 	characterRepository repository.CharacterRepository,
 	sessionIDGen sessionid.Generator,
 	sessionRepository repository.SessionRepository,
 ) *SessionHandler {
+
+	eventbus, ok := notificationPublisher.(*infraNotification.EventBus)
+	if !ok {
+		panic("failed to cast interface ")
+	}
+
 	return &SessionHandler{
-		ctx: ctx,
+		ctx:                    ctx,
+		notificationPublisher:  eventbus,
+		notificationSubscriber: notificationSubscriber,
 		startsessionPorts: session.StartPorts{
 			SessionRepository:  sessionRepository,
 			SessionIDGenerator: sessionIDGen,
@@ -67,6 +81,8 @@ func (handler *SessionHandler) startSession(w http.ResponseWriter, r *http.Reque
 		http.Error(w, fmt.Sprintf("error creating new session: %v", err), http.StatusBadRequest)
 		return
 	}
+
+	handler.notificationPublisher.Subscribe(handler.notificationSubscriber)
 
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("application", "plain/text")

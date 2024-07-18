@@ -2,8 +2,7 @@ package handler
 
 import (
 	"context"
-	"fmt"
-	"io"
+	"encoding/json"
 	"net/http"
 
 	"github.com/Penomatikus/onionarch/internal/api/rest"
@@ -13,49 +12,24 @@ import (
 )
 
 type NotificationHandler struct {
-	ctx     context.Context
-	sink    map[model.SessionID][]model.Notification
-	service notification.Service
+	ctx      context.Context
+	sink     map[model.SessionID][]model.Notification
+	consumer notification.Consumer
 }
 
-func NewNotificationHandler(ctx context.Context, Service notification.Service) *NotificationHandler {
+func NewNotificationHandler(ctx context.Context, consumer notification.Consumer) *NotificationHandler {
 	notificationSink := make(map[model.SessionID][]model.Notification)
 
 	return &NotificationHandler{
-		ctx:     ctx,
-		sink:    notificationSink,
-		service: Service,
+		ctx:      ctx,
+		sink:     notificationSink,
+		consumer: consumer,
 	}
-}
-
-// route: /api/v1/fatecore/session/{sessionid}/notification POST
-func (handler *NotificationHandler) SendNotification(w http.ResponseWriter, r *http.Request) {
-	handler.sendNotification(w, r)
 }
 
 // // route: /api/v1/fatecore/session/{sessionid}/notification GET
 func (handler *NotificationHandler) CollectNotification(w http.ResponseWriter, r *http.Request) {
 	handler.collectNotification(w, r)
-}
-
-func (handler *NotificationHandler) sendNotification(w http.ResponseWriter, r *http.Request) {
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("error reading body from request: %v", err), http.StatusInternalServerError)
-		return
-	}
-
-	notificationWriter := infraNotification.JSONSinkWriter{
-		Sink: &handler.sink,
-	}
-
-	err = handler.service.Send(handler.ctx, body, notificationWriter)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("error sending notification to session: %v", err), http.StatusBadRequest)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
 }
 
 func (handler *NotificationHandler) collectNotification(w http.ResponseWriter, r *http.Request) {
@@ -65,18 +39,25 @@ func (handler *NotificationHandler) collectNotification(w http.ResponseWriter, r
 		return
 	}
 
-	var request struct{ Offset int }
+	var request struct{ CharID, Offset int }
 	if err := rest.DecodeRequest(&request, w, r); err != nil {
 		return
 	}
 
-	notificationReader := infraNotification.JSONSinkReader{
-		Notifications: handler.sink[model.SessionID(sID)][request.Offset:],
+	sink, ok := handler.consumer.(*infraNotification.EventSink)
+	if !ok {
+		panic("interface to type cast failed")
 	}
 
-	out, err := handler.service.Read(handler.ctx, &notificationReader)
+	notificationForChat := sink.CollectFor(
+		infraNotification.EventRecipient{
+			SessionID:   model.SessionID(sID),
+			CharacterID: request.CharID,
+		}, request.Offset)
+
+	out, err := json.Marshal(notificationForChat)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("error while reading session notifications: %v", err), http.StatusBadRequest)
+		http.Error(w, "error while serializing norifications", http.StatusInternalServerError)
 		return
 	}
 

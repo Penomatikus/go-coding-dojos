@@ -1,89 +1,47 @@
 package notification
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"fmt"
-	"io"
-	"time"
 
 	"github.com/Penomatikus/onionarch/internal/domain/model"
 	"github.com/Penomatikus/onionarch/internal/domain/notification"
 )
 
-type JSONSinkWriter struct {
-	Data []byte
-	Sink *map[model.SessionID][]model.Notification
-}
-
-func (w JSONSinkWriter) Write(p []byte) (n int, err error) {
-	var note model.Notification
-	if err = json.Unmarshal(p, &note); err != nil {
-		return
-	}
-	note.CreatedAt = time.Now()
-
-	sessionNotifications := (*w.Sink)[note.SessionId]
-	sessionNotifications = append(sessionNotifications, note)
-	(*w.Sink)[note.SessionId] = sessionNotifications
-
-	return len(p), err
-}
-
-type JSONSinkReader struct {
-	Notifications         []model.Notification
-	buffer                *bytes.Buffer
-	bytesRead, bytesTotal int
-}
-
-func (r *JSONSinkReader) Read(p []byte) (n int, err error) {
-	if r.buffer == nil {
-		data, err := json.Marshal(r.Notifications)
-		if err != nil {
-			return 0, err
-		}
-		r.buffer = bytes.NewBuffer(data)
-		r.bytesTotal = len(data)
+type (
+	EventRecipient struct {
+		SessionID   model.SessionID
+		CharacterID int
 	}
 
-	n, err = r.buffer.Read(p)
-	if err != nil {
-		return
+	EventSink struct {
+		events map[EventRecipient][]model.Notification
 	}
+)
 
-	r.bytesRead += n
-	if r.bytesRead > r.bytesTotal {
-		err = io.EOF
+func NewEventSink() notification.Consumer {
+	sink := &EventSink{
+		events: make(map[EventRecipient][]model.Notification),
 	}
-	return n, err
+	return sink
 }
 
-type service struct{}
-
-func PrivideService() notification.Service {
-	return &service{}
-}
-
-func (s *service) Send(ctx context.Context, p []byte, w io.Writer) error {
-	n, err := w.Write(p)
-	if err != nil || n == 0 {
-		return fmt.Errorf("%s: %d bytes written", err, n)
-	}
-	return nil
-}
-
-func (s *service) Read(ctx context.Context, r io.Reader) (out []byte, err error) {
-	buf := make([]byte, 8)
+// https://medium.com/@souravchoudhary0306/implementation-of-event-driven-architecture-in-go-golang-28d9a1c01f91
+func (es *EventSink) Consum(ctx context.Context, notificationChan <-chan model.Notification) error {
 	for {
-		_, err = r.Read(buf)
-		switch err {
-		case io.EOF:
-			return out, nil
-		case nil:
-			out = append(out, buf...)
-		default:
-			return nil, err
+		select {
+		case notification := <-notificationChan:
+			recipient := EventRecipient{
+				SessionID:   notification.SessionId,
+				CharacterID: notification.FromId,
+			}
+			es.events[recipient] = append(es.events[recipient], notification)
+			continue
+		case <-ctx.Done():
+			return nil
 		}
 	}
+}
+
+func (es *EventSink) CollectFor(recipient EventRecipient, offset int) []model.Notification {
+	return es.events[recipient][offset:]
 }

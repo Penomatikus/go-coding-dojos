@@ -29,9 +29,9 @@ type (
 	}
 
 	Notification struct {
+		Body      any
 		CreatedAt time.Time
-		SessionId SessionID
 		FromId    int
-		Body      string
+		SessionId SessionID
 	}
 )

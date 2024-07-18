@@ -13,41 +13,11 @@ import (
 	"github.com/Penomatikus/onionarch/internal/infrastructure/notification"
 )
 
-func Test_SendNotification(t *testing.T) {
-	ctx := context.Background()
-	notificationHandler := NewNotificationHandler(
-		ctx,
-		notification.PrivideService(),
-	)
-
-	jsonData, err := json.Marshal(model.Notification{
-		SessionId: "1337",
-		FromId:    1,
-		Body:      "Hello Moto!",
-	})
-
-	if err != nil {
-		t.Fatalf("%s: Error marshalling data to JSON:", err)
-	}
-
-	req := httptest.NewRequest("POST", "/api/v1/fatecore/session/1337/notification", bytes.NewReader(jsonData))
-	rec := httptest.NewRecorder()
-
-	notificationHandler.SendNotification(rec, req)
-
-	res := rec.Result()
-	defer res.Body.Close()
-
-	if res.StatusCode != 200 {
-		t.Fatalf("expected 200 got %d", res.StatusCode)
-	}
-}
-
 func Test_ReceiveNotification(t *testing.T) {
 	ctx := context.Background()
 	notificationHandler := NewNotificationHandler(
 		ctx,
-		notification.PrivideService(),
+		notification.NewEventSink(),
 	)
 
 	jsonData, err := json.Marshal(model.Notification{
@@ -63,7 +33,7 @@ func Test_ReceiveNotification(t *testing.T) {
 	req := httptest.NewRequest("POST", "/api/v1/fatecore/session/1337/notification", bytes.NewReader(jsonData))
 	rec := httptest.NewRecorder()
 
-	notificationHandler.SendNotification(rec, req)
+	notificationHandler.CollectNotification(rec, req)
 	res := rec.Result()
 	defer res.Body.Close()
 

@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/Penomatikus/onionarch/internal/api/rest"
+	"github.com/Penomatikus/onionarch/internal/domain/notification"
 	"github.com/Penomatikus/onionarch/internal/domain/repository"
 	"github.com/Penomatikus/onionarch/internal/domain/usecases"
 	"github.com/Penomatikus/onionarch/internal/domain/usecases/character"
@@ -26,12 +27,15 @@ type (
 
 func NewDoActionHandler(ctx context.Context,
 	characterRepository repository.CharacterRepository,
-	sessionRepository repository.SessionRepository) *DoActionHandler {
+	sessionRepository repository.SessionRepository,
+	notificationPublisher notification.Publisher,
+) *DoActionHandler {
 	return &DoActionHandler{
 		ctx: ctx,
 		doPorts: character.DoPorts{
-			CharacterRepository: characterRepository,
-			SessionRepository:   sessionRepository,
+			CharacterRepository:   characterRepository,
+			SessionRepository:     sessionRepository,
+			NotificationPublisher: notificationPublisher,
 		},
 	}
 }
@@ -66,7 +70,6 @@ func (handler *DoActionHandler) doAction(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(json)
 }

@@ -12,10 +12,14 @@ import (
 	"github.com/Penomatikus/onionarch/internal/domain/repository/repositorytest"
 	"github.com/Penomatikus/onionarch/internal/domain/sessionid/sessionidtest"
 	"github.com/Penomatikus/onionarch/internal/domain/usecases/session"
+	"github.com/Penomatikus/onionarch/internal/infrastructure/notification"
 )
 
 func Test_Session_Success(t *testing.T) {
 	ctx := context.Background()
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	dbStrore := repositorytest.NewDBStore()
 	sessionIdGen := sessionidtest.ProvideSessionIDGen()
 
@@ -28,7 +32,17 @@ func Test_Session_Success(t *testing.T) {
 		t.Fatalf("%s: Error creating character", err)
 	}
 
-	handler := NewSessionHandler(ctx, characterRepo, sessionIdGen, sessioenRepo)
+	notificationPublisher := notification.NewEventBus()
+	eventSubscriber := make(notification.EventSubscriber)
+	handler := NewSessionHandler(ctx,
+		notificationPublisher,
+		eventSubscriber,
+		characterRepo,
+		sessionIdGen,
+		sessioenRepo,
+	)
+
+	go notification.NewEventSink().Consum(ctx, eventSubscriber)
 
 	var sessionID *string
 	t.Run("Start session", func(t *testing.T) {
@@ -127,5 +141,4 @@ func Test_Session_Success(t *testing.T) {
 			t.Fatal("character did not leave")
 		}
 	})
-
 }
