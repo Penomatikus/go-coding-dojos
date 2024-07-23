@@ -13,10 +13,11 @@ func Test_UpdateCharacter_Success(t *testing.T) {
 	dbStore := repositorytest.NewDBStore()
 
 	characterRepo := repositorytest.ProvideCharacterRepository(&dbStore)
-	if err := characterRepo.Create(ctx, &model.Character{
+	charID, err := characterRepo.Create(ctx, &model.Character{
 		Name:        "Tester",
 		Description: "Möp",
-	}); err != nil {
+	})
+	if err != nil {
 		t.Fatalf("%s: Error creating chracacter", err)
 	}
 
@@ -25,8 +26,8 @@ func Test_UpdateCharacter_Success(t *testing.T) {
 	}
 	points := 99
 	sId := model.SessionID("1")
-	err := Update(context.Background(), ports, UpdateRequest{
-		ID:        1,
+	err = Update(context.Background(), ports, UpdateRequest{
+		ID:        charID,
 		Points:    &points,
 		SessionID: &sId,
 	})

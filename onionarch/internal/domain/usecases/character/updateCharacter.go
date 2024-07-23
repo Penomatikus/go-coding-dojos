@@ -24,15 +24,11 @@ func Update(ctx context.Context, ports UpdatePorts, req UpdateRequest) error {
 		return nil
 	}
 
-	_, err := ports.CharacterRepository.FindByID(ctx, req.ID)
+	char, err := ports.CharacterRepository.FindByID(ctx, req.ID)
 	if err != nil {
 		return err
 	}
 
-	update := &model.Character{
-		ID:        req.ID,
-		Points:    *req.Points,
-		SessionID: req.SessionID,
-	}
-	return ports.CharacterRepository.Update(ctx, update)
+	char.Points = *req.Points
+	return ports.CharacterRepository.Update(ctx, char)
 }

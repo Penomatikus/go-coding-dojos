@@ -30,11 +30,12 @@ func Test_DoAction(t *testing.T) {
 	}
 
 	characterRepo := repositorytest.ProvideCharacterRepository(&dbStore)
-	if err := characterRepo.Create(ctx, &model.Character{
+	charID, err := characterRepo.Create(ctx, &model.Character{
 		Name:        "Tester",
 		Description: "Möp",
 		SessionID:   &sessionID,
-	}); err != nil {
+	})
+	if err != nil {
 		t.Fatal(err)
 	}
 
@@ -43,7 +44,7 @@ func Test_DoAction(t *testing.T) {
 		SessionRepository:   sessionRepo,
 	}
 
-	charPoints, err := Do(ctx, doPorts, DoRequest{ActionName: "Reject PR", CharacterID: 1, Costs: -10, SessionID: sessionID})
+	charPoints, err := Do(ctx, doPorts, DoRequest{ActionName: "Reject PR", CharacterID: charID, Costs: -10, SessionID: sessionID})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -52,7 +53,7 @@ func Test_DoAction(t *testing.T) {
 		t.Fatalf("Got %d; Want %d", charPoints, -10)
 	}
 
-	charPoints, err = Do(ctx, doPorts, DoRequest{ActionName: "Approve PR", CharacterID: 1, Costs: 10, SessionID: sessionID})
+	charPoints, err = Do(ctx, doPorts, DoRequest{ActionName: "Approve PR", CharacterID: charID, Costs: 10, SessionID: sessionID})
 	if err != nil {
 		t.Fatal(err)
 	}

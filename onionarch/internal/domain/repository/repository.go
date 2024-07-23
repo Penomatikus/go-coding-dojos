@@ -20,8 +20,9 @@ type (
 	}
 
 	CharacterRepository interface {
-		Create(ctx context.Context, character *model.Character) error
+		Create(ctx context.Context, character *model.Character) (int, error)
 		Update(ctx context.Context, character *model.Character) error
 		FindByID(ctx context.Context, ID int) (*model.Character, error)
+		FindBySession(ctx context.Context, sessionID model.SessionID) ([]model.Character, error)
 	}
 )

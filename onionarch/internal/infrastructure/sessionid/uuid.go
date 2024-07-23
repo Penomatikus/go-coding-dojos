@@ -9,7 +9,6 @@ import (
 type SessionID struct{}
 
 func (sid *SessionID) GenerateSessionID() (model.SessionID, error) {
-
 	id, err := uuid.NewV4()
 	if err != nil {
 		return "", err

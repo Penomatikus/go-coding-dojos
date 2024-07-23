@@ -32,7 +32,7 @@ func Test_DoAction(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = characterRepo.Create(ctx, &model.Character{
+	charID, err := characterRepo.Create(ctx, &model.Character{
 		Name:      "Tester",
 		SessionID: &sessionID,
 	})
@@ -42,7 +42,7 @@ func Test_DoAction(t *testing.T) {
 
 	request, err := json.Marshal(character.DoRequest{
 		ActionName:  "Teste",
-		CharacterID: 1,
+		CharacterID: charID,
 		Costs:       10,
 		SessionID:   sessionID,
 	})

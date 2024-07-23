@@ -14,7 +14,7 @@ func Test_CreateCharacter_Success(t *testing.T) {
 		CharacterRepository: repositorytest.ProvideCharacterRepository(&db),
 	}
 
-	err := Create(context.Background(), ports, CreateRequest{
+	charID, err := Create(context.Background(), ports, CreateRequest{
 		Name:        "Wilde Inge",
 		Description: "Wild wie zwei Juttas",
 	})
@@ -23,7 +23,7 @@ func Test_CreateCharacter_Success(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	character, err := ports.CharacterRepository.FindByID(context.Background(), 1)
+	character, err := ports.CharacterRepository.FindByID(context.Background(), charID)
 	if err != nil {
 		t.Fatal(err)
 	}

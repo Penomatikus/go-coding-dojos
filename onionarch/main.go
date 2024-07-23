@@ -2,7 +2,8 @@ package main
 
 import (
 	"context"
-	"errors"
+	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -12,44 +13,39 @@ import (
 
 	"github.com/Penomatikus/onionarch/internal"
 	"github.com/Penomatikus/onionarch/internal/api/rest/middleware"
-	"github.com/Penomatikus/onionarch/internal/domain/model"
 )
 
-func main() {
+var port int
 
-	ctx := context.Background()
-	ctx, cancel := context.WithCancel(ctx)
+func init() {
+	flag.IntVar(&port, "p", 8080, "Port number to listen on (default 8080)")
+}
+
+func main() {
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	eventSubscriber := make(chan model.Notification)
-	app := internal.Initialize(ctx, eventSubscriber)
-
+	app := internal.Initialize(ctx)
 	router := internal.NewRouterV1(app)
-	middlewares := middleware.Compose(middleware.Auth, middleware.Log, middleware.Metrics)
 
-	server := &http.Server{
-		Handler: middlewares(router),
+	flag.Parse()
+	if port == 0 {
+		port = 8080
 	}
 
-	log.Println("Starting...")
-	go func() {
-		if err := server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
-			log.Fatalf("HTTP server error: %v", err)
-		}
-	}()
+	server := &http.Server{
+		Addr:    fmt.Sprintf(":%d", port),
+		Handler: middleware.Compose(middleware.Auth, middleware.Log, middleware.Metrics)(router),
+	}
 
-	go internal.NewNotificationConsumer().Consum(ctx, eventSubscriber)
+	app.Start(ctx, server)
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 	<-sigChan
+	log.Println("\nReceived shudown signal")
 
-	shutdownCtx, shutdownRelease := context.WithTimeout(ctx, 10*time.Second)
-	defer shutdownRelease()
-
-	if err := server.Shutdown(shutdownCtx); err != nil {
-		log.Fatalf("HTTP shutdown error: %v", err)
-	}
-
-	log.Println("Bye.")
+	ctx, cancel = context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	app.Stop(ctx, server)
 }

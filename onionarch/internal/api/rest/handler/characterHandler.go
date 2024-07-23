@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -43,13 +44,20 @@ func (handler *CharacterHandler) createCharacter(w http.ResponseWriter, r *http.
 	if err := rest.DecodeRequest(&request, w, r); err != nil {
 		return
 	}
-
-	if err := character.Create(handler.ctx, handler.createPorts, request); err != nil {
+	charID, err := character.Create(handler.ctx, handler.createPorts, request)
+	if err != nil {
 		http.Error(w, fmt.Sprintf("error while creating chraracter: %v", err), http.StatusBadRequest)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	out, err := json.Marshal(struct{ CharacterID int }{CharacterID: charID})
+	if err != nil {
+		http.Error(w, "error while serializing norifications", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(out)
 }
 
 func (handler *CharacterHandler) updateCharacter(w http.ResponseWriter, r *http.Request) {

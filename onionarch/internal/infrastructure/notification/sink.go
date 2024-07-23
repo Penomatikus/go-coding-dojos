@@ -19,14 +19,12 @@ type (
 )
 
 func NewEventSink() notification.Consumer {
-	sink := &EventSink{
+	return &EventSink{
 		events: make(map[EventRecipient][]model.Notification),
 	}
-	return sink
 }
 
-// https://medium.com/@souravchoudhary0306/implementation-of-event-driven-architecture-in-go-golang-28d9a1c01f91
-func (es *EventSink) Consum(ctx context.Context, notificationChan <-chan model.Notification) error {
+func (es *EventSink) Consume(ctx context.Context, notificationChan <-chan model.Notification) error {
 	for {
 		select {
 		case notification := <-notificationChan:

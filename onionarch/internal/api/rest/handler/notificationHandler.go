@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/Penomatikus/onionarch/internal/api/rest"
 	"github.com/Penomatikus/onionarch/internal/domain/model"
@@ -39,8 +40,15 @@ func (handler *NotificationHandler) collectNotification(w http.ResponseWriter, r
 		return
 	}
 
-	var request struct{ CharID, Offset int }
-	if err := rest.DecodeRequest(&request, w, r); err != nil {
+	charID, err := strconv.ParseInt(r.URL.Query().Get("charID"), 10, 64)
+	if err != nil {
+		http.Error(w, "error while reading char id from query param", http.StatusInternalServerError)
+		return
+	}
+
+	offset, err := strconv.ParseInt(r.URL.Query().Get("offset"), 10, 64)
+	if err != nil {
+		http.Error(w, "error while reading offset from query param", http.StatusInternalServerError)
 		return
 	}
 
@@ -52,8 +60,12 @@ func (handler *NotificationHandler) collectNotification(w http.ResponseWriter, r
 	notificationForChat := sink.CollectFor(
 		infraNotification.EventRecipient{
 			SessionID:   model.SessionID(sID),
-			CharacterID: request.CharID,
-		}, request.Offset)
+			CharacterID: int(charID),
+		}, int(offset))
+
+	if notificationForChat == nil {
+		return
+	}
 
 	out, err := json.Marshal(notificationForChat)
 	if err != nil {

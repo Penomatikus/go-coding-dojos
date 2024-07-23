@@ -11,13 +11,14 @@ import (
 
 type (
 	StartRequest struct {
-		Title string
-		Owner int
+		Title   string
+		OwnerID int
 	}
 
 	StartPorts struct {
-		SessionRepository  repository.SessionRepository
-		SessionIDGenerator sessionid.Generator
+		CharacterRepository repository.CharacterRepository
+		SessionRepository   repository.SessionRepository
+		SessionIDGenerator  sessionid.Generator
 	}
 )
 
@@ -27,10 +28,21 @@ func Start(ctx context.Context, ports StartPorts, req StartRequest) (*model.Sess
 		return nil, err
 	}
 
-	return &sessionID, ports.SessionRepository.Create(ctx, &model.Session{
+	owner, err := ports.CharacterRepository.FindByID(ctx, req.OwnerID)
+	if err != nil {
+		return nil, err
+	}
+
+	err = ports.SessionRepository.Create(ctx, &model.Session{
 		ID:        sessionID,
 		CreatedAt: time.Now(),
 		Title:     req.Title,
-		Owner:     req.Owner,
+		Owner:     req.OwnerID,
 	})
+	if err != nil {
+		return nil, err
+	}
+
+	owner.SessionID = &sessionID
+	return &sessionID, ports.CharacterRepository.Update(ctx, owner)
 }

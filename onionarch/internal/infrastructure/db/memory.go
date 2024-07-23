@@ -82,13 +82,13 @@ func ProvideCharacterRepository(dbStore *dbStore) repository.CharacterRepository
 	return &characterRepository{store: dbStore}
 }
 
-func (repo *characterRepository) Create(ctx context.Context, character *model.Character) error {
+func (repo *characterRepository) Create(ctx context.Context, character *model.Character) (int, error) {
 	character.ID = repo.store.autoIncrement(_CHARACTER)
 	if _, ok := repo.store.character[character.ID]; ok {
-		return repository.ErrAlreadyExists
+		return -1, repository.ErrAlreadyExists
 	}
 	repo.store.character[character.ID] = character
-	return nil
+	return character.ID, nil
 }
 
 func (repo *characterRepository) FindByID(ctx context.Context, characterID int) (*model.Character, error) {
@@ -97,6 +97,16 @@ func (repo *characterRepository) FindByID(ctx context.Context, characterID int) 
 		return nil, repository.ErrNotFound
 	}
 	return c, nil
+}
+
+func (repo *characterRepository) FindBySession(ctx context.Context, sessionID model.SessionID) ([]model.Character, error) {
+	characters := make([]model.Character, 0)
+	for _, char := range repo.store.character {
+		if *char.SessionID == sessionID {
+			characters = append(characters, *char)
+		}
+	}
+	return characters, nil
 }
 
 func (repo *characterRepository) Update(ctx context.Context, character *model.Character) error {

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -21,6 +22,7 @@ type SessionHandler struct {
 	startsessionPorts      session.StartPorts
 	joinsessionPorts       session.JoinPorts
 	leavesessionPorts      session.LeavePorts
+	lookupsessionPorts     session.LookupPorts
 }
 
 func NewSessionHandler(ctx context.Context,
@@ -30,7 +32,6 @@ func NewSessionHandler(ctx context.Context,
 	sessionIDGen sessionid.Generator,
 	sessionRepository repository.SessionRepository,
 ) *SessionHandler {
-
 	eventbus, ok := notificationPublisher.(*infraNotification.EventBus)
 	if !ok {
 		panic("failed to cast interface ")
@@ -41,14 +42,19 @@ func NewSessionHandler(ctx context.Context,
 		notificationPublisher:  eventbus,
 		notificationSubscriber: notificationSubscriber,
 		startsessionPorts: session.StartPorts{
-			SessionRepository:  sessionRepository,
-			SessionIDGenerator: sessionIDGen,
+			CharacterRepository: characterRepository,
+			SessionRepository:   sessionRepository,
+			SessionIDGenerator:  sessionIDGen,
 		},
 		joinsessionPorts: session.JoinPorts{
 			SessionRepository:   sessionRepository,
 			CharacterRepository: characterRepository,
 		},
 		leavesessionPorts: session.LeavePorts{
+			SessionRepository:   sessionRepository,
+			CharacterRepository: characterRepository,
+		},
+		lookupsessionPorts: session.LookupPorts{
 			SessionRepository:   sessionRepository,
 			CharacterRepository: characterRepository,
 		},
@@ -70,6 +76,11 @@ func (handler *SessionHandler) LeaveSession(w http.ResponseWriter, r *http.Reque
 	handler.leaveSession(w, r)
 }
 
+// route: /api/v1/fatecore/session/{sessionid}/party
+func (handler *SessionHandler) LookupSession(w http.ResponseWriter, r *http.Request) {
+	handler.lookupSession(w, r)
+}
+
 func (handler *SessionHandler) startSession(w http.ResponseWriter, r *http.Request) {
 	var request session.StartRequest
 	if err := rest.DecodeRequest(&request, w, r); err != nil {
@@ -82,11 +93,16 @@ func (handler *SessionHandler) startSession(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	handler.notificationPublisher.Subscribe(handler.notificationSubscriber)
+	handler.notificationPublisher.Subscribe(handler.notificationSubscriber, *id)
 
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("application", "plain/text")
-	fmt.Fprint(w, *id)
+	out, err := json.Marshal(struct{ SessionID string }{SessionID: string(*id)})
+	if err != nil {
+		http.Error(w, "error while serializing norifications", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(out)
 }
 
 func (handler *SessionHandler) joinSession(w http.ResponseWriter, r *http.Request) {
@@ -131,4 +147,33 @@ func (handler *SessionHandler) leaveSession(w http.ResponseWriter, r *http.Reque
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+
+func (handler *SessionHandler) lookupSession(w http.ResponseWriter, r *http.Request) {
+	var request session.LookupRequest
+	if err := rest.DecodeRequest(&request, w, r); err != nil {
+		return
+	}
+
+	sID, ok := rest.PathValues(r, "sessionid")["sessionid"]
+	if !ok {
+		http.Error(w, "error while reading session id from path", http.StatusBadRequest)
+		return
+	}
+	request.SessionID = model.SessionID(sID)
+
+	party, err := session.Lookup(handler.ctx, handler.lookupsessionPorts, request)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("error leaving session: %v", err), http.StatusBadRequest)
+		return
+	}
+
+	out, err := json.Marshal(struct{ SessionParty []model.Character }{SessionParty: party})
+	if err != nil {
+		http.Error(w, "error while serializing norifications", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(out)
 }

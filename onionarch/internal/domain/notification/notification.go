@@ -12,6 +12,6 @@ type (
 	}
 
 	Consumer interface {
-		Consum(ctx context.Context, notificationChan <-chan model.Notification) error
+		Consume(ctx context.Context, notificationChan <-chan model.Notification) error
 	}
 )

@@ -22,6 +22,7 @@ type (
 	DoRequest struct {
 		ActionName  string
 		CharacterID int
+		OwnerAction bool
 		Costs       int
 		SessionID   model.SessionID
 	}
@@ -48,17 +49,17 @@ func Do(ctx context.Context, ports DoPorts, request DoRequest) (int, error) {
 		char.Points += request.Costs
 	}
 
-	// Master adjusting points, notififaction is not for character
-	fromId := char.ID
-	if session.Owner == request.CharacterID {
-		fromId = session.Owner
+	fromID := char.ID
+	if request.OwnerAction {
+		fromID = session.Owner
 	}
 
 	err = ports.NotificationPublisher.Publish(ctx, model.Notification{
 		CreatedAt: time.Now(),
 		SessionId: request.SessionID,
-		FromId:    fromId,
-		Body:      []byte(fmt.Sprintf("%d points spent", request.Costs)),
+		FromId:    fromID,
+		Body: []byte(fmt.Sprintf("action %s costs where %d",
+			request.ActionName, request.Costs)),
 	})
 	if err != nil {
 		return 0, err

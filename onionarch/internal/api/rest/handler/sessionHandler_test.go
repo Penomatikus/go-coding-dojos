@@ -26,9 +26,10 @@ func Test_Session_Success(t *testing.T) {
 	sessioenRepo := repositorytest.ProvideSessionRepository(&dbStrore)
 
 	characterRepo := repositorytest.ProvideCharacterRepository(&dbStrore)
-	if err := characterRepo.Create(ctx, &model.Character{
+	charID, err := characterRepo.Create(ctx, &model.Character{
 		Name: "Test",
-	}); err != nil {
+	})
+	if err != nil {
 		t.Fatalf("%s: Error creating character", err)
 	}
 
@@ -42,13 +43,13 @@ func Test_Session_Success(t *testing.T) {
 		sessioenRepo,
 	)
 
-	go notification.NewEventSink().Consum(ctx, eventSubscriber)
+	go notification.NewEventSink().Consume(ctx, eventSubscriber)
 
 	var sessionID *string
 	t.Run("Start session", func(t *testing.T) {
 		jsonData, err := json.Marshal(session.StartRequest{
-			Title: "Test",
-			Owner: 1,
+			Title:   "Test",
+			OwnerID: charID,
 		})
 
 		if err != nil {
@@ -79,7 +80,7 @@ func Test_Session_Success(t *testing.T) {
 	t.Run("Join session", func(t *testing.T) {
 		jsonData, err := json.Marshal(session.JoinRequest{
 			SessionID:   model.SessionID(*sessionID),
-			CharacterID: 1,
+			CharacterID: charID,
 		})
 
 		if err != nil {
@@ -112,7 +113,7 @@ func Test_Session_Success(t *testing.T) {
 	t.Run("Leave session", func(t *testing.T) {
 		jsonData, err := json.Marshal(session.LeaveRequest{
 			SessionID:   model.SessionID(*sessionID),
-			CharacterID: 1,
+			CharacterID: charID,
 		})
 
 		if err != nil {

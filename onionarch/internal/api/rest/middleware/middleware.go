@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"fmt"
+	"log"
 	"net/http"
 )
 
@@ -23,21 +23,21 @@ func Compose(chain ...Middleware) Middleware {
 
 func Auth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Print("\nAuth Middleware")
+		log.Println("Auth Middleware (not implemented)")
 		next.ServeHTTP(w, r)
 	})
 }
 
 func Log(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Print("\nLogging Middleware")
+		log.Println("New " + r.Method + " request to " + r.RequestURI)
 		next.ServeHTTP(w, r)
 	})
 }
 
 func Metrics(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Print("\nMetrics Middleware")
+		log.Println("Metrics Middleware (not implemented)")
 		next.ServeHTTP(w, r)
 	})
 }

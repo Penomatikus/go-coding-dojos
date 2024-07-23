@@ -18,7 +18,9 @@ func PathValues(r *http.Request, values ...string) (vMap map[string]string) {
 }
 
 func DecodeRequest[T any](request *T, w http.ResponseWriter, r *http.Request) (err error) {
-	if err = json.NewDecoder(r.Body).Decode(request); err != nil {
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	if err = decoder.Decode(request); err != nil {
 		err = fmt.Errorf("%w: %s", ErrDecodingFailed, err)
 		http.Error(w, fmt.Sprintf("error parsing request body: %v", err), http.StatusBadRequest)
 		return

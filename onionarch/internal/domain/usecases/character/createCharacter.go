@@ -17,7 +17,7 @@ type (
 	}
 )
 
-func Create(ctx context.Context, ports CreatePorts, reg CreateRequest) error {
+func Create(ctx context.Context, ports CreatePorts, reg CreateRequest) (int, error) {
 	return ports.CharacterRepository.Create(ctx, &model.Character{
 		Name:        reg.Name,
 		Description: reg.Description,

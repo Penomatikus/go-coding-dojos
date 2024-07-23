@@ -1,57 +1,51 @@
 package handler
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"fmt"
 	"io"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/Penomatikus/onionarch/internal/domain/model"
-	"github.com/Penomatikus/onionarch/internal/infrastructure/notification"
+	infraNotification "github.com/Penomatikus/onionarch/internal/infrastructure/notification"
 )
 
 func Test_ReceiveNotification(t *testing.T) {
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	sink := infraNotification.NewEventSink()
 	notificationHandler := NewNotificationHandler(
 		ctx,
-		notification.NewEventSink(),
+		sink,
 	)
 
-	jsonData, err := json.Marshal(model.Notification{
-		SessionId: "1337",
-		FromId:    1,
-		Body:      "Hello Moto!!!",
-	})
-
-	if err != nil {
-		t.Fatalf("%s: Error marshalling data to JSON:", err)
+	subscriberChan := make(infraNotification.EventSubscriber)
+	notificationPublisher := infraNotification.NewEventBus()
+	eventBus, ok := notificationPublisher.(*infraNotification.EventBus)
+	if !ok {
+		panic("failed to cast interface ")
 	}
 
-	req := httptest.NewRequest("POST", "/api/v1/fatecore/session/1337/notification", bytes.NewReader(jsonData))
+	sessionID := model.SessionID("1337")
+	eventBus.Subscribe(subscriberChan, sessionID)
+
+	go sink.Consume(ctx, subscriberChan)
+	defer cancel()
+
+	eventBus.Publish(ctx, model.Notification{
+		Body:      "Hallo Welt",
+		CreatedAt: time.Now(),
+		FromId:    1,
+		SessionId: sessionID,
+	})
+
+	req := httptest.NewRequest("GET", "/api/v1/fatecore/session/1337/notification?charID=1&offset=0", nil)
 	rec := httptest.NewRecorder()
+
+	req.SetPathValue("sessionid", "1337")
 
 	notificationHandler.CollectNotification(rec, req)
 	res := rec.Result()
-	defer res.Body.Close()
-
-	if res.StatusCode != 200 {
-		t.Fatalf("expected 200 got %d", res.StatusCode)
-	}
-
-	jsonData, err = json.Marshal(struct{ Offset int }{Offset: 0})
-	if err != nil {
-		fmt.Println("Error marshalling data to JSON:", err)
-		return
-	}
-
-	req = httptest.NewRequest("GET", "/api/v1/fatecore/session/1337/notification", bytes.NewReader(jsonData))
-	rec = httptest.NewRecorder()
-
-	notificationHandler.CollectNotification(rec, req)
-	res = rec.Result()
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
