@@ -93,7 +93,6 @@ func NewRouterV1(app *app) *http.ServeMux {
 	router.HandleFunc("POST /character/new", app.characterHandler.CreateCharacter)
 	router.HandleFunc("POST /character/do/action", app.doHandler.DoAction)
 	router.HandleFunc("POST /character/do/points", app.doHandler.DoPoints)
-	router.HandleFunc("POST /character/{id}/update", app.characterHandler.UpdateCharacter)
 
 	base := "/api/v1/fatecore"
 	v1 := http.NewServeMux()

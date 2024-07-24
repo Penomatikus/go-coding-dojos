@@ -34,11 +34,6 @@ func (handler *CharacterHandler) CreateCharacter(w http.ResponseWriter, r *http.
 	handler.createCharacter(w, r)
 }
 
-// route: /api/v1/fatecore/character/{id}/update
-func (handler *CharacterHandler) UpdateCharacter(w http.ResponseWriter, r *http.Request) {
-	handler.updateCharacter(w, r)
-}
-
 func (handler *CharacterHandler) createCharacter(w http.ResponseWriter, r *http.Request) {
 	var request character.CreateRequest
 	if err := rest.DecodeRequest(&request, w, r); err != nil {
@@ -58,18 +53,4 @@ func (handler *CharacterHandler) createCharacter(w http.ResponseWriter, r *http.
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(out)
-}
-
-func (handler *CharacterHandler) updateCharacter(w http.ResponseWriter, r *http.Request) {
-	var request character.UpdateRequest
-	if err := rest.DecodeRequest(&request, w, r); err != nil {
-		return
-	}
-
-	if err := character.Update(handler.ctx, handler.updatePorts, request); err != nil {
-		http.Error(w, fmt.Sprintf("error while updating chraracter: %v", err), http.StatusBadRequest)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
 }
