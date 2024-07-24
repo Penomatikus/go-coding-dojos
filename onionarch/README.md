@@ -24,7 +24,7 @@ My personal goals where mainly focused on the new http/net 1.22 and on how to im
 | Create a new character | POST | /character/new | {"Name": "name", "Description": "desc."} |  none | Character ID
 | Do your action | POST | /character/do/action | { "ActionName": "reject pr", "CharacterID": 2, "OwnerAction": false, "Costs": -10,"SessionID": "sID" }|  none | Dice result, new character points
 | Gift take points, no dice role (owner only)** | POST | /character/do/points | { "ActionName": "adjustment", "CharacterID": 2, "OwnerAction": true, "Costs": 100,"SessionID": "sID"} | none | Dice result (0), new character points
-| 
+
 
 In `./httptest/tryit.md` you can find explicit examples with curl. 
 
@@ -39,8 +39,8 @@ This is my very own personal rating. You can agree or disagree. If you want to p
 
 | area  | personal rating (max: 5)  | description  | 
 |--------------|-----------|-----------|
-| API-Design   | ●●        | Didn't quite understand the fate system in the first place and moved to a simpler version. Many refactors things doesn't work, or are bad designed.
-| Architecture | ●●●●      | Hard to undestand when there is so many and different approaches. Don't feels goish but managed it quite well.
+| API-Design   | ●●        | Didn't quite understand the fate system in the first place and moved to a simpler version. Many refactors over the time. Things don't work, or are bad designed.
+| Architecture | ●●●●      | Hard to undestand. There are so many and different approaches. Don't feels goish but managed it quite well.
 | Restful      | ●●●●      | Learned a lot about net/http 1.22. Many is not implemented here tho. Middlewares are fun. ServerMux is fun. 
 | Concurreny   | ●         | There is no locking implemented on purpose. The fokus was on arch and rest.
 | Testing      | ●●        | There are tests but nothing special. Could be better, but its not worse.
