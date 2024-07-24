@@ -41,9 +41,9 @@ This is my very own personal rating. You can agree or disagree. If you want to p
 |--------------|-----------|-----------|
 | API-Design   | ●●        | Didn't quite understand the fate system in the first place and moved to a simpler version. Many refactors over the time. Things don't work, or are bad designed.
 | Architecture | ●●●●      | Hard to undestand. There are so many and different approaches. Don't feels goish but managed it quite well.
-| Restful      | ●●●●      | Learned a lot about net/http 1.22. Many is not implemented here tho. Middlewares are fun. ServerMux is fun. 
+| Restful      | ●●●●      | Learned a lot about net/http 1.22. Many is not implemented here tho. Middlewares are fun. ServeMux is fun. 
 | Concurreny   | ●         | There is no locking implemented on purpose. The fokus was on arch and rest.
 | Testing      | ●●        | There are tests but nothing special. Could be better, but its not worse.
-| Code Quality | ●●●       | After a trilion refactorings the quality is lacking love. It's good enough to be not hated anymore.
-| Interfaces   | ●●●●      | Small and simple. Notification was fun to implement but it could be much better.  
-| Documentation| ●         | Unlike me, it's not much tho. I documented the stuff I will come back later for a lookup 
+| Code Quality | ●●●       | After a trilion refactorings the quality is lacking love. It's good enough to be not hated by me anymore.
+| Interfaces   | ●●●●      | Small and simple. Notification Pub/Sub was fun to implement but it could be much better.  
+| Documentation| ●         | Unlike me, it's not much tho. I documented the stuff I will come back later for a lookup. 
